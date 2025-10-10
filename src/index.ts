@@ -2,14 +2,14 @@ import Elysia from "elysia";
 import cors from "@elysiajs/cors";
 
 import { PostgresDataSource } from "./data/PostgresDataSource";
-import { usuarioRoutes } from "./presentation/usuario";
+import { usuarioPrivateRoutes, usuarioRoutes } from "./presentation/usuario";
 
 const app = new Elysia()
-  .decorate('db', PostgresDataSource)
+  .decorate('pgdb', PostgresDataSource)
   .onStart(async ({ decorator }) => {
     try {
       console.log('Base de datos conectada');
-      await decorator.db.initialize();
+      await decorator.pgdb.initialize();
     }
     catch (error) {
       console.error('Error al conectar con la base de datos:', error);
@@ -17,11 +17,12 @@ const app = new Elysia()
     }
   })
   .onStop(async ({ decorator }) => {
-    await decorator.db.destroy();
+    await decorator.pgdb.destroy();
   })
   .use(cors())
   .get("/", () => "Server is running")
   .use(usuarioRoutes)
+  .use(usuarioPrivateRoutes)
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

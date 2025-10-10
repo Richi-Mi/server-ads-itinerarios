@@ -13,8 +13,11 @@ export const usuarioRoutes = new Elysia({ prefix: "/user" })
     }, {
         body: UserModel.signUpBody
     })
-    .put("/", async ({ status, userController, body }) => {
-        return status(200, "Login exitoso")
+    .use(tokenPlugin)
+    .put("/", async ({ status, userController, body, tokenPlugin }) => {
+        return status(200, {
+            token: await tokenPlugin.sign({ correo: body.correo, role: 'user' })
+        })
         // const {correo, role} = await userController.doLogin(body)
         // return status(200, {
         //     token: await tokenPlugin.sign({ correo, role })
