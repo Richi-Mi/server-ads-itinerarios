@@ -7,7 +7,7 @@ import { authService } from "../services/auth.service";
 
 export const usuarioRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     .decorate('userController', new UserController())
-    .post("/", async ({ status, body, userController }) => {
+    .post("/register", async ({ status, body, userController }) => {
         const usuario = await userController.doRegister(body)
         return status(201, `Usuario ${usuario.correo} creado`)
     }, {
