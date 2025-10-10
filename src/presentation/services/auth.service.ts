@@ -24,7 +24,7 @@ export const authService = new Elysia({ name: 'service/auth' })
         const areToken = await tokenPlugin.verify(token) as Payload;
         
         if (!areToken)
-            return status(401)
+            return status(401, "No autorizado")
 
         user.correo = areToken.correo;
         user.role   = areToken.role;
