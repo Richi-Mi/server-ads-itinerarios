@@ -22,6 +22,8 @@ export const authService = new Elysia({ name: 'service/auth' })
     )
     .onBeforeHandle({ as: 'scoped' }, async ({ store: { user }, tokenPlugin, headers: { token }, status }) => {
         const areToken = await tokenPlugin.verify(token) as Payload;
+        console.log('Pase por la verificacion');
+        
         
         if (!areToken)
             return status(401, "No autorizado")
