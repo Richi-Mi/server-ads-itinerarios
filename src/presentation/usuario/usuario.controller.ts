@@ -42,7 +42,7 @@ export class UserController {
 
                 // 4. Definir la carpeta de destino y la ruta completa del archivo
                 // Usamos 'import.meta.dir' (de Bun/ESM) para obtener la ruta del directorio actual
-                const uploadDir = path.join(import.meta.dir, './../../../', 'uploads');
+                const uploadDir = "/fotos"
                 const filePath = path.join(uploadDir, filename);
 
                 // 5. Asegurarnos de que la carpeta de destino exista
@@ -50,8 +50,8 @@ export class UserController {
 
                 // 6. Escribir el archivo en el disco
                 await fs.writeFile(filePath, buffer);
-                
-                console.log(`Foto guardada en: ${filePath}`);
+
+                console.log(`Foto guardada en: https://server-ads-itinerarios-production.up.railway.app/${filePath}`);
 
                 usuario.foto_url = filePath; // Guardamos la ruta en la entidad Usuario
 
