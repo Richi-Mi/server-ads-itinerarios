@@ -25,7 +25,7 @@ export const usuarioRoutes = new Elysia({ prefix: "/user" })
     }, {
         body: UserModel.signInBody
     })
-export const usuarioPrivateRoutes = new Elysia({ prefix: "/user" })
+export const usuarioPrivateRoutes = new Elysia({ prefix: "/private/user" })
     .use(authService)
     .get("/", async ({ status, store: { user: { correo } } }) => {
         // const user = await userController.getUserInfo(correo)
