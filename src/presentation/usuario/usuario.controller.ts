@@ -42,7 +42,8 @@ export class UserController {
 
                 // 4. Definir la carpeta de destino y la ruta completa del archivo
                 // Usamos 'import.meta.dir' (de Bun/ESM) para obtener la ruta del directorio actual
-                const uploadDir = "/fotos"
+                // const uploadDir = "/fotos"
+                const uploadDir = path.join(import.meta.dir, '../../uploads/');
                 const filePath = path.join(uploadDir, filename);
 
                 // 5. Asegurarnos de que la carpeta de destino exista

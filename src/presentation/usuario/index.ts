@@ -13,8 +13,7 @@ export const usuarioRoutes = new Elysia({ prefix: "/user" })
     }, {
         body: UserModel.signUpBody
     })
-    .use(tokenPlugin)
-    .put("/", async ({ status, userController, body, tokenPlugin }) => {
+    .put("/", async ({ status, userController, body }) => {
         return status(200, "Login exitoso")
         // const {correo, role} = await userController.doLogin(body)
         // return status(200, {
@@ -23,15 +22,16 @@ export const usuarioRoutes = new Elysia({ prefix: "/user" })
     }, {
         body: UserModel.signInBody
     })
+export const usuarioPrivateRoutes = new Elysia({ prefix: "/user" })
     .use(authService)
-    .get("/", async ({ status, userController, store: { user: { correo } } }) => {
+    .get("/", async ({ status, store: { user: { correo } } }) => {
         // const user = await userController.getUserInfo(correo)
         // if( !user )
         //     return status(404)
         // return status(200, user)
         return status(200, { correo })
     })
-    .delete("/", async ({ status, userController, store: { user: { correo }} }) => {
+    .delete("/", async ({ status, store: { user: { correo }} }) => {
         // const userDeleted = await userController.deleteUser(correo)
         // if(!userDeleted)
         //     return status(404)
