@@ -7,13 +7,13 @@ import { authService } from "../services/auth.service";
 
 export const usuarioRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     .decorate('userController', new UserController())
+    .use(tokenPlugin)
     .post("/register", async ({ status, body, userController }) => {
         const usuario = await userController.doRegister(body)
         return status(201, `Usuario ${usuario.correo} creado`)
     }, {
         body: UserModel.signUpBody
     })
-    .use(tokenPlugin)
     .put("/", async ({ status, userController, body, tokenPlugin }) => {
         return status(200, {
             token: await tokenPlugin.sign({ correo: body.correo, role: 'user' })
