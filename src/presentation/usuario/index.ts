@@ -5,7 +5,7 @@ import { tokenPlugin } from "../../config/tokens";
 import { UserController } from "./usuario.controller";
 import { authService } from "../services/auth.service";
 
-export const usuarioRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
+export const usuarioRoutes = new Elysia({ prefix: "/auth", name: "Usuario" })
     .decorate('userController', new UserController())
     .use(tokenPlugin)
     .post("/register", async ({ status, body, userController }) => {
