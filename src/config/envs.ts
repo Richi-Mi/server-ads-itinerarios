@@ -8,6 +8,7 @@ declare module "bun" {
         DB_PASSWORD: string,
         DB_NAME: string,
         
-        SECRET_KEY: string
+        SECRET_KEY: string,
+        ENVIRONMENT: "development" | "production"
     }
 }

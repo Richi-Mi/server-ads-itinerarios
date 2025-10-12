@@ -3,20 +3,19 @@ import { t } from "elysia";
 export namespace UserModel {
 
     export const signUpBody = t.Object({
-        nombre: t.String(),
-        correo: t.String(),
-        password: t.String(),
+        nombre: t.String({ error: "El nombre es necesario" }),
+        correo: t.String({ error: "El correo es necesario" }),
+        password: t.String({ error: "La contraseña es necesaria" }),
         foto: t.Optional(
             t.File({ format: ["image/jpeg", "image/png", "image/jpg"] })
-        ),
-        privacity_mode: t.String()
+        )
     })
 
     export type SignUpBody = typeof signUpBody.static
 
     export const signInBody = t.Object({
-        correo:     t.String(),
-        password:   t.String()
+        correo:     t.String({ error: "El correo es necesario" }),
+        password:   t.String({ error: "La contraseña es necesaria" })
     })
     
     export type SignInBody = typeof signInBody.static

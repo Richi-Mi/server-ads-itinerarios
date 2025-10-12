@@ -1,4 +1,5 @@
 import Elysia, { t } from "elysia";
+
 import { tokenPlugin } from "../../config/tokens";
 
 type Payload = {
@@ -16,17 +17,16 @@ export const authService = new Elysia({ name: 'service/auth' })
     .guard(
         {
             headers: t.Object({
-                token: t.String()
+                token: t.String({
+                    error: "Token es necesario"
+                })
             })
         }
     )
     .onBeforeHandle({ as: 'scoped' }, async ({ store: { user }, tokenPlugin, headers: { token }, status }) => {
-        const areToken = await tokenPlugin.verify(token) as Payload;
-        console.log('Pase por la verificacion');
-        
-        
+        const areToken = await tokenPlugin.verify(token) as Payload;        
         if (!areToken)
-            return status(401, "No autorizado")
+            return status(401, "Token inválido o expirado");
 
         user.correo = areToken.correo;
         user.role   = areToken.role;
