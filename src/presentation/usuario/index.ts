@@ -5,27 +5,8 @@ import { tokenPlugin } from "../../config/tokens";
 import { UserController } from "./usuario.controller";
 import { authService } from "../services/auth.service";
 
-export const usuarioRoutes = new Elysia({ prefix: "/auth", name: "Usuario" })
-    .decorate('userController', new UserController())
-    .use(tokenPlugin)
-    .post("/register", async ({ status, body, userController }) => {
-        const usuario = await userController.doRegister(body)
-        return status(201, `Usuario con ${usuario.correo} creado`)
-    }, {
-        body: UserModel.signUpBody
-    })
-    .put("/", async ({ status, userController, body, tokenPlugin }) => {
-        return status(200, {
-            token: await tokenPlugin.sign({ correo: body.correo, role: 'user' })
-        })
-        // const {correo, role} = await userController.doLogin(body)
-        // return status(200, {
-        //     token: await tokenPlugin.sign({ correo, role })
-        // })
-    }, {
-        body: UserModel.signInBody
-    })
-export const usuarioPrivateRoutes = new Elysia({ prefix: "/private/user", name: "UsuarioPrivado" })
+
+export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     .use(authService)
     .get("/", async ({ status, store: { user: { correo } } }) => {
         // const user = await userController.getUserInfo(correo)
