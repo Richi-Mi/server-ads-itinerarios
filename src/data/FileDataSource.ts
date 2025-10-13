@@ -4,9 +4,18 @@ import { CustomError } from "../domain/CustomError";
 
 export class FileDataSource {
 
+    static instance : FileDataSource | null = null;
+
+    public static getInstance(environment: string = Bun.env.ENVIRONMENT): FileDataSource {
+        if (this.instance === null) {
+            this.instance = new FileDataSource(environment);
+        }
+        return this.instance;
+    }
+
     private uploadDir: string
 
-    constructor(environment: string = Bun.env.ENVIRONMENT) {
+    private constructor(environment: string = Bun.env.ENVIRONMENT) {
         this.uploadDir = environment === "development" ? path.join(import.meta.dir, '../../uploads/') : path.join('/fotos');
     }
 

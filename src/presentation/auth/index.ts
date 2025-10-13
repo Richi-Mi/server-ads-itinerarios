@@ -1,4 +1,4 @@
-import Elysia from "elysia"
+import Elysia, { file } from "elysia"
 
 import { tokenPlugin } from "../../config/tokens"
 
@@ -25,4 +25,16 @@ export const authRoutes = new Elysia({ prefix: "/auth", name: "Auth" })
         })
     }, {
         body: AuthModel.signInBody
+    })
+    .get("/verify-email", async ({ query: { email }, authController, status }) => {
+        if( !email )
+            return status(400, "Usuario con email no existe")
+        const [isVerified, fotoUrl] = await authController.verifyEmail(email)
+
+        if( isVerified )
+            return status(200, file(fotoUrl) )
+
+        return status(400, "El correo no es válido")
+    }, {
+        query: AuthModel.verifyEmailQuery
     })

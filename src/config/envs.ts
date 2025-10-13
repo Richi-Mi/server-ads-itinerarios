@@ -9,6 +9,11 @@ declare module "bun" {
         DB_NAME: string,
         
         SECRET_KEY: string,
-        ENVIRONMENT: "development" | "production"
+        ENVIRONMENT: "development" | "production",
+
+        MAILER_EMAIL: string,
+        MAILER_SECRET_KEY: string,
+
+        HOST: string
     }
 }

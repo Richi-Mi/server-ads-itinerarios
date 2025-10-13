@@ -3,13 +3,15 @@ import { AuthModel } from "./auth.model";
 
 import { PostgresDataSource } from "../../data/PostgresDataSource";
 import { FileDataSource } from "../../data/FileDataSource";
+import { EmailService } from "../../data/EmailService";
 import { CustomError } from "../../domain/CustomError";
 
 export class AuthController {
 
     constructor( 
         private userRepository = PostgresDataSource.getRepository(Usuario),
-        private fileDataSource = new FileDataSource()
+        private fileDataSource = FileDataSource.getInstance(),
+        private emailService = EmailService.getInstance()
     ) {}
 
     public doRegister = async (data : AuthModel.SignUpBody ) : Promise<Usuario> => {
@@ -28,29 +30,45 @@ export class AuthController {
         usuario.nombre = nombre
         usuario.correo = correo
         usuario.password = password
-
-        // TODO: Crear un servicio de envío de correos para verificar el email del usuario
         
         // Si al registrarse se envió una foto, guardarla.
         if(foto) 
             usuario.foto_url = await this.fileDataSource.saveFile(foto);
 
-        // Guardar el usuario en la base de datos.
-        await this.userRepository.save(usuario);    
-        
+        await Promise.all([
+            // Enviar correo de verificación
+            this.emailService.sendEmailForVerification(correo),
+            // Guardar el usuario
+            this.userRepository.save(usuario)
+        ])        
         return usuario
     }
     public doLogin = async ({ correo, password }: AuthModel.SignInBody) : Promise<Usuario> => {
         const user = await this.userRepository.findOneBy({ correo })     
         
+        // Verificar que el usuario exista
         if( !user )
             throw new CustomError("El usuario no existe", 401)
 
         const isPasswordValid = await Bun.password.verify(password, user.password)
 
+        // Verificar que la contraseña sea correcta
         if (!isPasswordValid)
             throw new CustomError("Contraseña incorrecta", 401)
 
         return user
+    }
+    public verifyEmail = async ( correo : string ) : Promise<[boolean, string]> => {
+        const user = await this.userRepository.findOneBy({ correo })
+        // Verificamos qué el usuario exista.
+        if( !user )
+            return [false, ""]
+
+        // Marcamos el correo como verificado.
+        user.verified_email = true
+
+        await this.userRepository.save(user)
+
+        return [true, user.foto_url]
     }
 }
