@@ -35,12 +35,11 @@ export class AuthController {
         if(foto) 
             usuario.foto_url = await this.fileDataSource.saveFile(foto);
 
-        await Promise.all([
-            // Enviar correo de verificación
-            this.emailService.sendEmailForVerification(correo),
-            // Guardar el usuario
-            this.userRepository.save(usuario)
-        ])        
+        // No hace falta await porque no necesitamos esperar a que se envíe el correo para continuar.
+        this.emailService.sendEmailForVerification(correo),
+
+        await this.userRepository.save(usuario)
+      
         return usuario
     }
     public doLogin = async ({ correo, password }: AuthModel.SignInBody) : Promise<Usuario> => {
