@@ -3,7 +3,8 @@ import { t } from "elysia"
 export namespace AuthModel {
 
     export const signUpBody = t.Object({
-        nombre: t.String({ error: "El nombre es necesario" }),
+        username: t.String({ error: "El username es necesario" }),
+        nombre_completo: t.String({ error: "El nombre completo es necesario" }),
         correo: t.String({ error: "El correo es necesario" }),
         password: t.String({ error: "La contraseña es necesaria" }),
         foto: t.Optional(

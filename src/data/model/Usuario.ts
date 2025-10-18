@@ -18,10 +18,13 @@ export class Usuario {
     correo: string
     
     @Column("varchar")
-    nombre : string
+    username : string
 
     @Column("varchar")
     password : string
+
+    @Column("varchar")
+    nombre_completo : string
 
     @Column({
         type: "varchar",

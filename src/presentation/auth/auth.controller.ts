@@ -15,7 +15,7 @@ export class AuthController {
     ) {}
 
     public doRegister = async (data : AuthModel.SignUpBody ) : Promise<Usuario> => {
-        const { nombre, correo, foto, password: uncrypted_password } = data
+        const { nombre_completo, username, correo, foto, password: uncrypted_password } = data
         // Hash de la contraseña
         const password = await Bun.password.hash(uncrypted_password);
 
@@ -27,7 +27,8 @@ export class AuthController {
         // Creación del usuario
         const usuario = new Usuario()
 
-        usuario.nombre = nombre
+        usuario.nombre_completo = nombre_completo
+        usuario.username = username
         usuario.correo = correo
         usuario.password = password
         

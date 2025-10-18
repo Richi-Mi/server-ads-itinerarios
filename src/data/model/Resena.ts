@@ -10,9 +10,6 @@ export class Resena {
     @Column()
     score : number;
     
-    @Column()
-    comment : string;
-    
     @ManyToOne(() => Publicacion, publicacion => publicacion.reseñas, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     publicacion : Relation<Publicacion>;
 
