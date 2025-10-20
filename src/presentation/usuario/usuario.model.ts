@@ -7,7 +7,7 @@ export namespace UserModel {
         foto: t.Optional(
             t.File({ format: ["image/jpeg", "image/png", "image/jpg"] })
         ),
-        privacity_mode: t.Optional(t.Boolean())
+        privacity_mode: t.Optional(t.String())
     })
 
     export type UpdateUserBody = typeof updateUserBody.static

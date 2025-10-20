@@ -40,11 +40,13 @@ export class UserController {
         // Actualizar campos
         user.username = body.username || user.username;
         user.nombre_completo = body.nombre_completo || user.nombre_completo;
-        user.privacity_mode = body.privacity_mode !== undefined ? body.privacity_mode : user.privacity_mode;
+        user.privacity_mode = body.privacity_mode === "true";
 
         // Actualizar foto si se proporciona una nueva.
         if( body.foto ) {
-            await this.fileDataSource.deleteFile( user.foto_url );
+            if( user.foto_url )
+                await this.fileDataSource.deleteFile( user.foto_url );
+            
             user.foto_url = await this.fileDataSource.saveFile( body.foto );
         }
         

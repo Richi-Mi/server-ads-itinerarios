@@ -15,9 +15,9 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
 
         return status(200, { ...user })
     })
-    .put("/update", async ({ status, store: { user: { correo } }, body, userController }) => {        
-        const userUpdated = await userController.updateUser(correo, body)
-        
+    .put("/update", async ({ status, store: { user: { correo } }, body, userController }) => {
+        const { password, ...userUpdated } = await userController.updateUser(correo, body)
+
         if(!userUpdated)
             return status(404, "Usuario no encontrado")
 
