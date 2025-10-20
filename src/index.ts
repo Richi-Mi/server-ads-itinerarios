@@ -6,6 +6,7 @@ import { PostgresDataSource } from "./data/PostgresDataSource";
 import { userRoutes } from "./presentation/usuario";
 import { CustomError } from "./domain/CustomError";
 import { authRoutes } from "./presentation/auth";
+import { FileDataSource } from "./data/FileDataSource";
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
@@ -38,6 +39,10 @@ const app = new Elysia()
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
+  .get('/fotos/:file', ({ params: { file }, status }) => {
+        const fileDataSource = FileDataSource.getInstance()
+        return status(200, fileDataSource.getFileFromSource(`/fotos/${file}`))
+    })
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

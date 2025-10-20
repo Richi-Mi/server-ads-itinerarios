@@ -46,4 +46,11 @@ export class FileDataSource {
             throw new CustomError("Error al eliminar la foto - Comuniquese con el administrador", 500);
         }
     }
+    public getFileFromSource = async (filePath : string) : Promise<Buffer> => {
+        const foto = await fs.readFile(filePath);
+        if( !foto ) {
+            throw new CustomError("Archivo no encontrado", 404)
+        }
+        return foto;
+    }
 }
