@@ -1,5 +1,6 @@
 import Elysia from "elysia";
 import cors from "@elysiajs/cors";
+import { staticPlugin } from "@elysiajs/static";
 
 import { PostgresDataSource } from "./data/PostgresDataSource";
 import { userRoutes } from "./presentation/usuario";
@@ -34,6 +35,7 @@ const app = new Elysia()
     return status(500, { message: "Internal Server Error. No sabemos qué hiciste. (O hicimos algo mal)" });
   })
   .use(cors())
+  .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
   .listen(Bun.env.PORT)

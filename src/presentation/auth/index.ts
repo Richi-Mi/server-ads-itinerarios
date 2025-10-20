@@ -26,9 +26,10 @@ export const authRoutes = new Elysia({ prefix: "/auth", name: "Auth" })
     }, {
         body: AuthModel.signInBody
     })
-    .get("/verify-email", async ({ query: { email }, authController, status }) => {
+    .get("/verify-email", async ({ query: { email }, authController, status, tokenPlugin }) => {
         if( !email )
             return status(400, "Usuario con email no existe")
+        
         const [isVerified, fotoUrl] = await authController.verifyEmail(email)
 
         if( isVerified )

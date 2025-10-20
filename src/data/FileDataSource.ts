@@ -38,4 +38,12 @@ export class FileDataSource {
             throw new CustomError("Error al guardar la foto - Comuniquese con el administrador", 500);
         }
     }
+    public deleteFile = async (filePath: string) : Promise<void> => {
+        try {
+            await fs.unlink(filePath);
+        } catch (error) {
+            console.error("Error al eliminar la foto:", error);
+            throw new CustomError("Error al eliminar la foto - Comuniquese con el administrador", 500);
+        }
+    }
 }

@@ -18,7 +18,7 @@ Este es el repositorio para el la creación del servidor de la aplicación para 
     bun dev     # Inicia el servidor en modo de desarrollo.
 ```
 
-3. Programa :D
+3. Llenar el archivo `template.env` con las variables de entorno correctas, y luego ejecutar el proyecto.
 
 ## Reglas para colaborar en el proyecto. 
 

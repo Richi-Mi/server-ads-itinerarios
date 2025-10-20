@@ -23,7 +23,9 @@ export const authService = new Elysia({ name: 'service/auth' })
             })
         }
     )
-    .onBeforeHandle({ as: 'scoped' }, async ({ store: { user }, tokenPlugin, headers: { token }, status }) => {
+    .onBeforeHandle({ as: 'scoped' }, async ({ store: { user }, tokenPlugin, headers: { token }, status }) => {  
+        console.log('Hola pase por aqui');
+              
         const areToken = await tokenPlugin.verify(token) as Payload;        
         if (!areToken)
             return status(401, "Token inválido o expirado");

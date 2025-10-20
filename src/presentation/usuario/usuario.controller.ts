@@ -9,14 +9,47 @@ export class UserController {
 
     constructor(
         private userRepository = PostgresDataSource.getRepository(Usuario),
-        private fileDataSource = new FileDataSource()
+        private fileDataSource = FileDataSource.getInstance()
     ) {}
 
 
-    public getUserInfo = async ( correo: string ) : Promise<void> => {
-        // TODO:
+    public getUserInfo = async ( correo: string ) : Promise<Usuario> => {
+        // TODO: Obtener toda la información adicional 
+        const user = await this.userRepository.findOne({ where: { correo } })
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+        return user;
     }
-    public deleteUser = async ( correo: string ) : Promise<void> => {
-        // TODO:
+    public deleteUser = async ( correo: string ) : Promise<Usuario> => {
+        const user = await this.userRepository.findOne({ where: { correo } });
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+        // Eliminar foto si existe.
+        if( user.foto_url )
+            await this.fileDataSource.deleteFile( user.foto_url );        
+        
+        await this.userRepository.remove(user);
+
+        return user;
+    }
+    public updateUser = async ( correo: string, body: UserModel.UpdateUserBody ) : Promise<Usuario> => {
+        const user = await this.userRepository.findOne({ where: { correo } });
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+
+        // Actualizar campos
+        user.username = body.username || user.username;
+        user.nombre_completo = body.nombre_completo || user.nombre_completo;
+        user.privacity_mode = body.privacity_mode !== undefined ? body.privacity_mode : user.privacity_mode;
+
+        // Actualizar foto si se proporciona una nueva.
+        if( body.foto ) {
+            await this.fileDataSource.deleteFile( user.foto_url );
+            user.foto_url = await this.fileDataSource.saveFile( body.foto );
+        }
+        
+        // Guardar cambios.
+        await this.userRepository.save(user);
+        return user;
     }
 }
