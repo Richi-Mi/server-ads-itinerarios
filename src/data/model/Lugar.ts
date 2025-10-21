@@ -1,7 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn, type Relation } from "typeorm"
 import { Actividad } from "./Actividad"
 
-// TODO : Completar esta tabla con la información que provea la API de places.
 @Entity()
 export class Lugar {
     @PrimaryColumn()
@@ -12,6 +11,24 @@ export class Lugar {
 
     @Column()
     mexican_state : string
+
+    @Column()
+    nombre : string
+
+    @Column()
+    latitud : number
+
+    @Column()
+    longitud : number
+
+    @Column()
+    foto_url : string
+
+    @Column()
+    google_score : number
+
+    @Column()
+    total_reviews : number
 
     @OneToMany( () => Actividad, actividad => actividad.lugar, { cascade: true})
     actividades : Relation<Actividad[]>
