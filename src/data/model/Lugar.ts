@@ -21,10 +21,10 @@ export class Lugar {
     @Column({ nullable: true})
     longitud : number
 
-    @Column()
+    @Column({ nullable: true })
     foto_url : string
 
-    @Column()
+    @Column({ nullable: true })
     google_score : number
 
     @Column()
