@@ -1,10 +1,10 @@
 import { Usuario } from "../../data/model";
 import { AuthModel } from "./auth.model";
 
-import { PostgresDataSource } from "../../data/PostgresDataSource";
-import { FileDataSource } from "../../data/FileDataSource";
-import { EmailService } from "../../data/EmailService";
-import { CustomError } from "../../domain/CustomError";
+import { PostgresDataSource }   from "../../data/PostgresDataSource";
+import { FileDataSource }       from "../../data/FileDataSource";
+import { EmailService }         from "../../data/EmailService";
+import { CustomError }          from "../../domain/CustomError";
 
 export class AuthController {
 

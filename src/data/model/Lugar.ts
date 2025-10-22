@@ -15,19 +15,19 @@ export class Lugar {
     @Column()
     nombre : string
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: "double precision" })
     latitud : number
 
-    @Column({ nullable: true})
+    @Column({ nullable: true, type: "double precision" })
     longitud : number
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: "text" })
     foto_url : string
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: "double precision" })
     google_score : number
 
-    @Column()
+    @Column({ nullable: true })
     total_reviews : number
 
     @OneToMany( () => Actividad, actividad => actividad.lugar, { cascade: true})
