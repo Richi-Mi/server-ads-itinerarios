@@ -32,6 +32,7 @@ export class EmailService {
     })
 
     async sendEmail( options : SendEmailOptions ) : Promise<boolean> {
+        // TODO: change this with resend
         const { to, subject, htmlBody, attachments = [] } = options
         try {
             await this.transporter.sendMail({

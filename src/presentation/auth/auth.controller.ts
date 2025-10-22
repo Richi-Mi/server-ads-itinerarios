@@ -36,10 +36,9 @@ export class AuthController {
         if(foto) 
             usuario.foto_url = await this.fileDataSource.saveFile(foto);
 
-        const [ _, areSended ] = await Promise.all([
-            this.userRepository.save(usuario),
-            this.emailService.sendEmailForVerification(correo)
-        ])
+        // this.emailService.sendEmailForVerification(correo)
+        
+        await this.userRepository.save(usuario)
       
         return usuario
     }
