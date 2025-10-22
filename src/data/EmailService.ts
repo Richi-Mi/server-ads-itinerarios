@@ -27,7 +27,8 @@ export class EmailService {
         auth: {
             user: Bun.env.MAILER_EMAIL,
             pass: Bun.env.MAILER_SECRET_KEY
-        }
+        },
+        debug: true
     })
 
     async sendEmail( options : SendEmailOptions ) : Promise<boolean> {
