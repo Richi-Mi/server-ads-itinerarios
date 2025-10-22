@@ -15,10 +15,10 @@ export class Lugar {
     @Column()
     nombre : string
 
-    @Column()
+    @Column({ nullable: true })
     latitud : number
 
-    @Column()
+    @Column({ nullable: true})
     longitud : number
 
     @Column()
