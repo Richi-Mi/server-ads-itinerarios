@@ -21,9 +21,26 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
         if(!userUpdated)
             return status(404, "Usuario no encontrado")
 
-        return status(200, { ...userUpdated})
+        return status(200, { ...userUpdated })
     }, {
         body: UserModel.updateUserBody
+    })
+    .post("/verify-password", async ({ status, store: { user: { correo } }, body, userController }) => {
+        const { password } = body;
+        const isValid = await userController.verifyPassword(correo, password);
+        if (!isValid) {
+            return status(401, { message: "Contraseña incorrecta" });
+        }
+        return status(200, { message: "Contraseña verificada correctamente" });
+    }, {
+        body: UserModel.verifyPasswordBody
+    })
+    .put("/update-password", async ({ status, store: { user: { correo }}, body, userController }) => {
+        const { newPassword } = body;        
+        await userController.updatePassword(correo, newPassword);
+        return status(202, { message: "Contraseña actualizada correctamente" });
+    }, {
+        body: UserModel.updatePasswordBody
     })
     .delete("/", async ({ status, store: { user: { correo } }, userController }) => {
         const userDeleted = await userController.deleteUser(correo)

@@ -30,8 +30,9 @@ const app = new Elysia()
     if (error instanceof CustomError && code === 'custom')
       return status(error.statusCode, error.toResponse());
 
-    if( code === 'VALIDATION' )
-      return status(400, { message: error.customError });
+    if( code === 'VALIDATION' ) {      
+      return status(400, { message: error.customError });  
+    }
     
     return status(500, { message: "Internal Server Error. No sabemos qué hiciste. (O hicimos algo mal)" });
   })
@@ -39,10 +40,9 @@ const app = new Elysia()
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
-  .get('/fotos/:file', ({ params: { file }, status }) => {
-        const fileDataSource = FileDataSource.getInstance()
-        return status(200, fileDataSource.getFileFromSource(`/fotos/${file}`))
-    })
+  .get("*", ({ status }) => {
+    return status(404, { message: "Ruta no encontrada" });
+  })
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
