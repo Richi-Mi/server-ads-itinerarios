@@ -1,6 +1,7 @@
 # Server de la aplicación WEB de itinerarios.
 
-Este es el repositorio para el la creación del servidor de la aplicación para creación de itinerarios en la materia de analisis y diseño de sistemas. El proyecto esta desarrollado en Bun + Elysia + TypeORM + TypeScript
+Este es el repositorio para el la creación del servidor de la aplicación para creación de itinerarios en la materia de analisis y diseño de sistemas.
+
 ## Configuración del servidor.
 
 1. Si es la primera vez qué se ejecuta
@@ -28,5 +29,3 @@ Este es el repositorio para el la creación del servidor de la aplicación para 
 3. Cuando termines tus cambios NO unas tu rama con la rama principal (main) desde tu computadora, crea un pull request para unir tus cambios a la rama principal.
 
 4. Espera a qué tus cambios sean resueltos y en caso de, realiza los cambios necesarios
-
-Cambio en otra rama
