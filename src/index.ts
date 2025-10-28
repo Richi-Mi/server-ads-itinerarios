@@ -1,12 +1,12 @@
 import Elysia from "elysia";
 import cors from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
-
 import { PostgresDataSource } from "./data/PostgresDataSource";
 import { userRoutes } from "./presentation/usuario";
 import { CustomError } from "./domain/CustomError";
 import { authRoutes } from "./presentation/auth";
 import { FileDataSource } from "./data/FileDataSource";
+import { publicacionRoutes } from "./presentation/publicacion";
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
@@ -30,8 +30,8 @@ const app = new Elysia()
     if (error instanceof CustomError && code === 'custom')
       return status(error.statusCode, error.toResponse());
 
-    if( code === 'VALIDATION' ) {      
-      return status(400, { message: error.customError });  
+    if( code === 'VALIDATION' ) {      
+      return status(400, { message: error.customError });  
     }
     
     return status(500, { message: "Internal Server Error. No sabemos qué hiciste. (O hicimos algo mal)" });
@@ -40,6 +40,7 @@ const app = new Elysia()
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
+  .use(publicacionRoutes) 
   .get("*", ({ status }) => {
     return status(404, { message: "Ruta no encontrada" });
   })
