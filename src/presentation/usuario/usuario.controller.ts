@@ -29,7 +29,6 @@ export class UserController {
             await this.fileDataSource.deleteFile( user.foto_url );        
         
         await this.userRepository.remove(user);
-
         return user;
     }
     public updateUser = async ( correo: string, body: UserModel.UpdateUserBody ) : Promise<Usuario> => {
@@ -53,21 +52,5 @@ export class UserController {
         // Guardar cambios.
         await this.userRepository.save(user);
         return user;
-    }
-    public updatePassword = async ( correo: string, newPassword: string ) : Promise<void> => {
-        const user = await this.userRepository.findOne({ where: { correo } });
-        if( !user )
-            throw new CustomError("Usuario no encontrado", 404);
-
-        user.password = await Bun.password.hash(newPassword);
-        await this.userRepository.save(user);
-    }
-    public verifyPassword = async ( correo: string, password: string ) : Promise<boolean> => {
-        const user = await this.userRepository.findOne({ where: { correo } });
-        
-        if( !user )
-            throw new CustomError("Usuario no encontrado", 404);
-        
-        return await Bun.password.verify(password, user.password);
     }
 }
