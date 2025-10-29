@@ -20,4 +20,8 @@ export namespace AuthModel {
     })
     
     export type SignInBody = typeof signInBody.static
+ 
+    export const verifyEmailQuery = t.Object({
+        email: t.String({ error: "El correo es necesario" })
+    })
 }

@@ -3,6 +3,7 @@ import { AuthModel } from "./auth.model";
 
 import { PostgresDataSource }   from "../../data/PostgresDataSource";
 import { FileDataSource }       from "../../data/FileDataSource";
+import { EmailService }         from "../../data/EmailService";
 import { CustomError }          from "../../domain/CustomError";
 
 export class AuthController {
@@ -10,6 +11,7 @@ export class AuthController {
     constructor( 
         private userRepository = PostgresDataSource.getRepository(Usuario),
         private fileDataSource = FileDataSource.getInstance(),
+        private emailService = EmailService.getInstance()
     ) {}
 
     public doRegister = async (data : AuthModel.SignUpBody ) : Promise<Usuario> => {
@@ -34,7 +36,8 @@ export class AuthController {
         if(foto) 
             usuario.foto_url = await this.fileDataSource.saveFile(foto);
 
-        // Guardar el usuario en la base de datos.        
+        // this.emailService.sendEmailForVerification(correo)
+        
         await this.userRepository.save(usuario)
       
         return usuario
