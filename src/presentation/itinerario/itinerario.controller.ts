@@ -1,5 +1,5 @@
 import { PostgresDataSource } from "../../data/PostgresDataSource";
-import { Itinerario, Usuario } from "../../data/model";
+import { Actividad, Itinerario, Usuario } from "../../data/model";
 import { CustomError } from "../../domain/CustomError";
 import { ItinerarioModel } from "./itinerario.model";
 
@@ -32,16 +32,17 @@ export class ItinerarioController {
         const id = parseInt(idString);
 
         const itinerario = await this.itinerarioRepository.findOne({
-            where: { id: id },
-            relations: ['actividades', 'owner']
+            where: { 
+                id: id,
+                owner: {
+                    correo: authUser.correo
+                }
+            },
+            relations: ['actividades']
         });
 
-        if (!itinerario) {
+        if (!itinerario) 
             throw new CustomError("Itinerario no encontrado", 404);
-        }
-
-        if( authUser.correo !== itinerario.owner.correo )
-            throw new CustomError("No tienes permiso para ver este itinerario", 403);
 
         return itinerario;
     }
@@ -50,13 +51,29 @@ export class ItinerarioController {
         const owner = await this.usuarioRepository.findOneBy({ correo: authUser.correo });
 
         if(!owner)
-            throw new CustomError("Usuario no autenticado", 401);
+            throw new CustomError("Usuario no encontrado", 401);
 
-        const nuevoItinerario = this.itinerarioRepository.create();
+        const nuevoItinerario = new Itinerario();
 
         nuevoItinerario.title = data.title;
         nuevoItinerario.owner = owner;
-       
+
+        if(!data.actividades)
+            throw new CustomError("El itinerario debe tener al menos una actividad", 400);
+                
+        const actividades = data.actividades.map( actData => {
+            const actividad = new Actividad();
+
+                if( actData.start_time )
+                    actividad.start_time = new Date(actData.start_time);
+                if( actData.end_time )
+                    actividad.end_time = new Date(actData.end_time);
+                actividad.description = actData.description;
+                actividad.lugar = { id_api_place: actData.lugarId } as any //Asumimos que el lugar ya existe
+            return actividad;
+        });
+        
+        nuevoItinerario.actividades = actividades;
         await this.itinerarioRepository.save(nuevoItinerario);
       
         return nuevoItinerario
@@ -69,16 +86,18 @@ export class ItinerarioController {
             throw new CustomError("ID invalido", 400);
 
         const itinerario = await this.itinerarioRepository.findOne({
-            where: {id: id},
+            where: {
+                id: id,
+                owner: {
+                    correo: authUser.correo
+                }
+            },
             relations: ['owner'],
 
         })
 
         if( !itinerario )
             throw new CustomError("Itinerario no encontrado", 404);
-
-        if( itinerario.owner.correo !== authUser.correo )
-            throw new CustomError("No tienes permiso para editar este itinerario", 403);
 
         //Actualizar campos
         itinerario.title = body.title || itinerario.title;
@@ -95,7 +114,12 @@ export class ItinerarioController {
             throw new CustomError("ID invalido", 400);
 
         const itinerario = await this.itinerarioRepository.findOne({
-            where: { id: id },
+            where: { 
+                id: id,
+                owner: {
+                    correo: authUser.correo
+                }
+            },
             relations: ['owner'],
         });
         if( !itinerario )

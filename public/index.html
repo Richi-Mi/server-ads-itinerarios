@@ -7,5 +7,46 @@
 </head>
 <body>
     <h1> Itinerarios </h1>
+    <form action="/auth/register" method="post">
+        <input type="email" name="correo" placeholder="Correo" />
+        <input type="password" name="password" placeholder="Password" />
+        <button type="submit"> Register </button>
+    </form>
+    <script>
+        
+        fetch('http://localhost:3000/auth', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                correo: 'renata160505@gmail.com',
+                password: 'Jose1914'
+            })
+        })
+        .then( response => {
+            console.log(response.status);
+            return response.json();
+        })
+        .then( data => {
+            localStorage.setItem('token', data.token);                        
+        })
+
+        fetch('http://localhost:3000/user', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'token': localStorage.getItem('token-d') || ''
+            }
+        })
+        .then( response => {
+            console.log(response.status);
+            return response.json();
+        })
+        .then( data => {
+            console.log(data);
+        });
+
+    </script>
 </body>
 </html>
