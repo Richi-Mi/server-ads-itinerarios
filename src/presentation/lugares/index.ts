@@ -8,11 +8,11 @@ export const lugarRoutes = new Elysia({ prefix: "/lugar", name: "Lugar" })
     .decorate('lugarController', new LugarController())
     //Se usa authService con .use(authService) para proteger las rutas
     .use(authService)
-    .get("/pague/:pague", async ({ status, lugarController, params : { pague } }) => {
-        const lugares = await lugarController.getAllLugares(pague);
+    .get("/", async ({ status, lugarController, query }) => {
+        const lugares = await lugarController.getAllLugares(query);
         return status(200, lugares);
     }, {
-        params: LugarModel.getLugaresParams
+        query: LugarModel.getLugaresQuery
     })
     .get("/:id", async ({ status, params, lugarController }) => {
         const lugar = await lugarController.getLugarById(params.id);

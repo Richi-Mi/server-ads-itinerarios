@@ -5,6 +5,7 @@ export const tokenPlugin = new Elysia({ name: 'plugin/token' })
     .use(
         jwt({
             name: "tokenPlugin",
-            secret: Bun.env.SECRET_KEY
+            secret: Bun.env.SECRET_KEY,
+            exp: "1d"
         })
     )

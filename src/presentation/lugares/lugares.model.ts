@@ -1,9 +1,16 @@
 import { t } from "elysia";
 
 export namespace LugarModel {
-    export const getLugaresParams = t.Object({
-        pague: t.Number()
+
+    export const getLugaresQuery = t.Object({
+        pague: t.Optional(t.Number({ default: 1 })),
+        limit: t.Optional(t.Number({ default: 10 })),
+        category: t.Optional(t.String()),
+        mexican_state: t.Optional(t.String())
     });
+
+    export type GetLugaresQuery = typeof getLugaresQuery.static;
+    
     export const getLugarParams = t.Object({
         id: t.String()
     });

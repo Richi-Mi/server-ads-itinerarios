@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs/promises";
 import { CustomError } from "../domain/CustomError";
+import { file } from "bun";
 
 export class FileDataSource {
 
@@ -14,6 +15,7 @@ export class FileDataSource {
     }
 
     private uploadDir: string
+    private hostUrl: string = Bun.env.HOST || "http://localhost:4000";
 
     private constructor(environment: string = Bun.env.ENVIRONMENT) {
         this.uploadDir = environment === "development" ? path.join(import.meta.dir, '../../uploads/') : path.join('/fotos');
@@ -32,7 +34,10 @@ export class FileDataSource {
 
             await fs.writeFile(filePath, buffer);
 
-            return filePath;
+            // TODO: Ajustar la URL según la configuración del servidor
+            console.log(this.hostUrl);
+            
+            return path.join("http://localhost:4000/", 'fotos', filename);
         } catch (error) {
             console.error("Error al guardar la foto:", error);
             throw new CustomError("Error al guardar la foto - Comuniquese con el administrador", 500);
@@ -40,17 +45,35 @@ export class FileDataSource {
     }
     public deleteFile = async (filePath: string) : Promise<void> => {
         try {
-            await fs.unlink(filePath);
+            const fileName = filePath.split('/').pop();
+            
+            await fs.unlink( path.join(this.uploadDir, fileName || '') );
         } catch (error) {
             console.error("Error al eliminar la foto:", error);
             throw new CustomError("Error al eliminar la foto - Comuniquese con el administrador", 500);
         }
     }
-    public getFileFromSource = async (filePath : string) : Promise<Buffer> => {
-        const foto = await fs.readFile(filePath);
+    public getFileFromSource = async (filePath : string) : Promise<{ mimeType: string, buffer: Buffer }> => {
+        const foto = await fs.readFile( path.join(this.uploadDir, filePath) );
         if( !foto ) {
             throw new CustomError("Archivo no encontrado", 404)
         }
-        return foto;
+        // Determinar el tipo de contenido (MIME type) basado en la extensión del archivo
+        const extension = filePath.split('.').pop()?.toLowerCase()
+        let mimeType = 'application/octet-stream';
+
+        switch (extension) {
+            case 'jpg':
+            case 'jpeg':
+                mimeType = 'image/jpeg';
+            break;
+            case 'png':
+                mimeType = 'image/png';
+            break;
+        }
+        return {
+            mimeType,
+            buffer: foto
+        }
     }
 }

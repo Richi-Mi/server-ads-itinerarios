@@ -37,9 +37,9 @@ const app = new Elysia()
     if (error instanceof CustomError && code === 'custom')
       return status(error.statusCode, error.toResponse());
 
-    if( code === 'VALIDATION' )
+    if (code === 'VALIDATION')
       return status(400, { message: error.customError });
-    
+
     return status(500, { message: "Internal Server Error" });
   })
   .use(cors())
@@ -49,10 +49,19 @@ const app = new Elysia()
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
-  .get('/fotos/:file', ({ params: { file }, status }) => {
-        const fileDataSource = FileDataSource.getInstance()
-        return status(200, fileDataSource.getFileFromSource(`/fotos/${file}`))
-    })
+  .get('/fotos/:file', async ({ params: { file }, set }) => {
+    // * Ruta para servir imagenes desde el sistema de archivos
+    const fileDataSource = FileDataSource.getInstance();
+    const { mimeType, buffer } = await fileDataSource.getFileFromSource(`${file}`);
+
+    if (!buffer || buffer.length === 0) 
+      throw new CustomError("Archivo no encontrado", 404);
+
+    // Return the response.
+    set.headers['Content-Type'] = mimeType;
+    set.status = 200; 
+    return buffer;
+  })
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
