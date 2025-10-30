@@ -18,7 +18,22 @@ Este es el repositorio para el la creación del servidor de la aplicación para 
     bun dev     # Inicia el servidor en modo de desarrollo.
 ```
 
-3. Llenar el archivo `template.env` con las variables de entorno correctas, y luego ejecutar el proyecto.
+3. Crea y llena un archivo `.env` con las variables de entorno correctas, y luego ejecutar el proyecto.
+```Py
+PORT = 3000
+
+DB_HOST="localhost"
+DB_PORT=5432
+DB_USER=""
+DB_PASSWORD=""
+DB_NAME="your database"
+
+SECRET_KEY=""
+
+ENVIRONMENT=""
+# HOST="https://harol-lovers.up.railway.app"
+HOST="http://localhost:3000"
+```
 
 ## Reglas para colaborar en el proyecto. 
 

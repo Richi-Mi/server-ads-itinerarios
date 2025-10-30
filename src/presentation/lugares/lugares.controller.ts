@@ -9,12 +9,13 @@ export class LugarController {
         private lugarRepository = PostgresDataSource.getRepository(Lugar)
     ) {}
 
-    public getAllLugares = async (): Promise<Lugar[]> => {
+    public getAllLugares = async (pague: number): Promise<Lugar[]> => {
         
         const lugares = await this.lugarRepository.find({
-            relations: ['actividades']
+            take: 10,
+            skip: pague ? (pague - 1) * 10 : 0
         });
-        
+
         return lugares;
     }
 
@@ -34,9 +35,9 @@ export class LugarController {
 
     public createLugar = async ( data: LugarModel.RegLugarCuerpo ) : Promise<Lugar> => {
         // Verificar que el lugar no exista.
-        //const existe = await this.lugarRepository.findOneBy({ id_api_place: data.id_api_place })
-        //if( existe )
-        //    throw new CustomError("El lugar ya está registrado", 409)
+        const existe = await this.lugarRepository.findOneBy({ id_api_place: data.id_api_place })
+        if( existe )
+            throw new CustomError("El lugar ya está registrado", 409)
 
         const lugar = this.lugarRepository.create(data);
        

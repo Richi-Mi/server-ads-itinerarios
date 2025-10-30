@@ -8,29 +8,37 @@ import { t } from "elysia";
 
 export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itinerario" })
     .decorate('itinerarioController', new ItinerarioController())
-    
     .use(authService)
-
     .get("/", async ({ status, store, itinerarioController }) => {
-        
-        const itinerarios = await itinerarioController.getAllItinerarios(store.user);
-        
-        //No necesitamos verificar si esta vacio, un array vacio es una respuesta valida (200 OK)
-        // return status(200, {...itinerarios});
-        return status(200, itinerarios);
+        try {
+            const itinerarios = await itinerarioController.getAllItinerarios(store.user);
+            return status(200, itinerarios);
+        }
+        catch (error) {            
+            throw error;
+        }
     })
 
     .get("/:id", async ({ status, params, store, itinerarioController }) => {
-        const itinerario = await itinerarioController.getItinerarioById(params.id, store.user);
-        
-        return status(200, {...itinerario});
+        try {
+            const itinerario = await itinerarioController.getItinerarioById(params.id, store.user);
+            return status(200, {...itinerario});
+        }
+        catch (error) {            
+            throw error;
+        }
     }, {
         params: ItinerarioModel.getItinerarioParams
     })
 
     .post("/registro", async ({ status, body, store, itinerarioController }) => {
-        const nuevoItinerario = await itinerarioController.createItinerario(body, store.user);
-        return status(201, {...nuevoItinerario});
+        try {
+            const nuevoItinerario = await itinerarioController.createItinerario(body, store.user);
+            return status(201, {...nuevoItinerario});
+        }
+        catch (error) {
+            throw error;
+        }
     }, {
         body: ItinerarioModel.regItinerarioCuerpo
     })

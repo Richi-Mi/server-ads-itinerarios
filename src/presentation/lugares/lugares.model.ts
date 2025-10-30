@@ -1,13 +1,16 @@
 import { t } from "elysia";
 
 export namespace LugarModel {
+    export const getLugaresParams = t.Object({
+        pague: t.Number()
+    });
     export const getLugarParams = t.Object({
         id: t.String()
     });
 
     export const regLugarCuerpo = t.Object( //Para registrar el lugar
         {
-            //id_api_place: t.String(),
+            id_api_place: t.String(),
             category: t.String(),
             mexican_state: t.String(),
             nombre: t.String(),

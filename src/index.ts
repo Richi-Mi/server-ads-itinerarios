@@ -23,7 +23,7 @@ const app = new Elysia()
     }
     catch (error) {
       console.error('Error al conectar con la base de datos:', error);
-      process.exit(1); // CORRECCIÓN: Usar process.exit(1)
+      process.exit(1);
     }
   })
   .onStop(async ({ decorator }: { decorator: any }) => { 
@@ -32,11 +32,13 @@ const app = new Elysia()
   .error({
     'custom': CustomError
   })
-  
   .onError(({ code, error, set }) => { 
+    console.error(error);
+    
     if (code === 'custom') {
-      set.status = error.statusCode; 
-      return error.toResponse();
+      const customError = error as CustomError;
+      set.status = customError.statusCode; 
+      return customError.toResponse();
     }
 
     if (code === 'VALIDATION') {
@@ -60,15 +62,12 @@ const app = new Elysia()
 
   .get('/fotos/:file', ({ params, status }) => {
       const fileDataSource = FileDataSource.getInstance()
-
       return status(200, fileDataSource.getFileFromSource(`/fotos/${params.file}`))
   }, {
-
       params: t.Object({
           file: t.String({ error: "El nombre del archivo debe ser un texto" })
       })
   })
-
 
   .get("*", ({ status }) => {
     return status(404, { message: "Ruta no encontrada" });

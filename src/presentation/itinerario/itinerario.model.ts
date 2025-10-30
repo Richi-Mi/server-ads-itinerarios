@@ -5,9 +5,18 @@ export namespace ItinerarioModel {
         id: t.String()
     });
 
-    export const regItinerarioCuerpo = t.Object( //Para registrar el itinerario
-        {
-            title: t.String(),
+    export const regItinerarioCuerpo = t.Object({
+            title: t.String({ error: "Debe llevar un título el itinerario" }),
+            actividades: t.Optional(
+                t.Array(
+                    t.Object({
+                        start_time: t.Optional(t.String({ error: "Debe llevar una hora de inicio" })),
+                        end_time: t.Optional(t.String({ error: "Debe llevar una hora de fin" })),
+                        description: t.String({ error: "Debe llevar una descripción" }),
+                        lugarId: t.String({ error: "Debe llevar un lugar" })
+                    })
+                )
+            )
         }
     );
 

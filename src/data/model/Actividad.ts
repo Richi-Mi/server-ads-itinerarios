@@ -7,10 +7,10 @@ export class Actividad {
     @PrimaryGeneratedColumn()
     id : number;
 
-    @Column()
+    @Column({ nullable: true })
     start_time : Date;
 
-    @Column()
+    @Column({ nullable: true })
     end_time : Date;
 
     @Column()
