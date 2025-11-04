@@ -9,11 +9,21 @@ export class LugarController {
         private lugarRepository = PostgresDataSource.getRepository(Lugar)
     ) {}
 
-    public getAllLugares = async (pague: number): Promise<Lugar[]> => {
+    public getAllLugares = async ({ pague, limit, category, mexican_state}: LugarModel.GetLugaresQuery): Promise<Lugar[]> => {
+
+        const whereClause: any = {};
+        category && (whereClause.category = category);
+        mexican_state && (whereClause.mexican_state = mexican_state);
         
         const lugares = await this.lugarRepository.find({
-            take: 10,
-            skip: pague ? (pague - 1) * 10 : 0
+            take: limit || 10,
+            skip: pague ? (pague - 1) * 10 : 0,
+            where: {
+                ...whereClause
+            },
+            order: {
+                google_score: "DESC"
+            }
         });
 
         return lugares;
@@ -22,8 +32,7 @@ export class LugarController {
     public getLugarById = async (id: string): Promise<Lugar> => {
 
         const lugar = await this.lugarRepository.findOne({
-            where: { id_api_place: id },
-            relations: ['actividades']
+            where: { id_api_place: id }
         });
 
         if (!lugar) {

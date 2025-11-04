@@ -41,13 +41,10 @@ const app = new Elysia()
       return customError.toResponse();
     }
 
-    if (code === 'VALIDATION') {
-      set.status = 400; 
-      return { message: (error as any).customError || 'Error de validación' };
-    }
-    
-    set.status = 500; 
-    return { message: "Internal Server Error" };
+    if (code === 'VALIDATION')
+      return status(400, { message: error.customError });
+
+    return status(500, { message: "Internal Server Error" });
   })
   .use(cors())
   .use(staticPlugin())
@@ -57,22 +54,19 @@ const app = new Elysia()
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
+  .get('/fotos/:file', async ({ params: { file }, set }) => {
+    // * Ruta para servir imagenes desde el sistema de archivos
+    const fileDataSource = FileDataSource.getInstance();
+    const { mimeType, buffer } = await fileDataSource.getFileFromSource(`${file}`);
 
-  .use(publicacionRoutes) 
+    if (!buffer || buffer.length === 0) 
+      throw new CustomError("Archivo no encontrado", 404);
 
-  .get('/fotos/:file', ({ params, status }) => {
-      const fileDataSource = FileDataSource.getInstance()
-      return status(200, fileDataSource.getFileFromSource(`/fotos/${params.file}`))
-  }, {
-      params: t.Object({
-          file: t.String({ error: "El nombre del archivo debe ser un texto" })
-      })
+    // Return the response.
+    set.headers['Content-Type'] = mimeType;
+    set.status = 200; 
+    return buffer;
   })
-
-  .get("*", ({ status }) => {
-    return status(404, { message: "Ruta no encontrada" });
-  })
-  
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
