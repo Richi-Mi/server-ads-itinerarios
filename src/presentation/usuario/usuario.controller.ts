@@ -2,8 +2,9 @@ import { Usuario } from "../../data/model";
 import { UserModel } from "./usuario.model";
 
 import { PostgresDataSource } from "../../data/PostgresDataSource";
-import { FileDataSource }     from "../../data/FileDataSource";
+import { FileDataSource } from "../../data/FileDataSource";
 import { CustomError } from "../../domain/CustomError";
+import { FindManyOptions, Like } from "typeorm"; // Importamos 'Like' y 'FindManyOptions'
 
 export class UserController {
 
@@ -11,7 +12,6 @@ export class UserController {
         private userRepository = PostgresDataSource.getRepository(Usuario),
         private fileDataSource = FileDataSource.getInstance()
     ) {}
-
 
     public getUserInfo = async ( correo: string ) : Promise<Usuario> => {
         // TODO: Obtener toda la información adicional 
@@ -24,9 +24,9 @@ export class UserController {
         const user = await this.userRepository.findOne({ where: { correo } });
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
-        // Eliminar foto si existe.
+
         if( user.foto_url )
-            await this.fileDataSource.deleteFile( user.foto_url );        
+            await this.fileDataSource.deleteFile( user.foto_url );        
         
         await this.userRepository.remove(user);
         return user;
@@ -36,12 +36,10 @@ export class UserController {
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
 
-        // Actualizar campos
         user.username = body.username || user.username;
         user.nombre_completo = body.nombre_completo || user.nombre_completo;
         user.privacity_mode = body.privacity_mode === "true";
 
-        // Actualizar foto si se proporciona una nueva.
         if( body.foto ) {
             if( user.foto_url )
                 await this.fileDataSource.deleteFile( user.foto_url );
@@ -49,7 +47,7 @@ export class UserController {
             user.foto_url = await this.fileDataSource.saveFile( body.foto );
         }
         
-        // Guardar cambios.
+     
         await this.userRepository.save(user);
         return user;
     }
@@ -69,4 +67,44 @@ export class UserController {
         
         return await Bun.password.verify(password, user.password);
     }
+    /**
+     * Busca viajeros (usuarios) por un término de búsqueda.
+     * Solo devuelve usuarios públicos.
+     * @param searchTerm El texto para buscar en 'username' y 'nombre_completo'
+     */
+    public searchTravelers = async (searchTerm: string | undefined): Promise<Partial<Usuario>[]> => {
+        
+        if (!searchTerm || searchTerm.trim() === "") {
+            return [];
+        }
+
+        const searchPattern = Like(`%${searchTerm}%`);
+
+        const options: FindManyOptions<Usuario> = {
+            where: [
+                { 
+                    nombre_completo: searchPattern,
+                    privacity_mode: false 
+                },
+                { 
+                    username: searchPattern,
+                    privacity_mode: false 
+                }
+            ],
+            
+            select: {
+                username: true,
+                nombre_completo: true,
+                foto_url: true
+            },
+            
+            take: 10 
+        };
+
+        const users = await this.userRepository.find(options);
+
+        return users;
+    }
+    
 }
+
