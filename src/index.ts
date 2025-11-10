@@ -7,6 +7,7 @@ import { userRoutes } from "./presentation/usuario";
 import { lugarRoutes } from "./presentation/lugares";
 import { itinerarioRoutes } from "./presentation/itinerario"
 import { actividadRoutes } from "./presentation/actividad"
+import { recommendationRoutes } from "./presentation/recommendation";
 
 import { CustomError } from "./domain/CustomError";
 import { authRoutes } from "./presentation/auth";
@@ -54,6 +55,7 @@ const app = new Elysia()
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
+  .use(recommendationRoutes)
   .get('/fotos/:file', async ({ params: { file }, set }) => {
     // * Ruta para servir imagenes desde el sistema de archivos
     const fileDataSource = FileDataSource.getInstance();
