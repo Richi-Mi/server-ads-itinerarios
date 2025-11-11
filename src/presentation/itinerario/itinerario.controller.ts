@@ -22,7 +22,7 @@ export class ItinerarioController {
                     correo: authUser.correo
                 }
             },
-            relations: ['actividades']
+            relations: ['actividades', 'actividades.lugar']
         });
         
         return itinerarios;
@@ -38,7 +38,7 @@ export class ItinerarioController {
                     correo: authUser.correo
                 }
             },
-            relations: ['actividades']
+            relations: ['actividades', 'actividades.lugar']
         });
 
         if (!itinerario) 
@@ -64,10 +64,9 @@ export class ItinerarioController {
         const actividades = data.actividades.map( actData => {
             const actividad = new Actividad();
 
-                if( actData.start_time )
-                    actividad.start_time = new Date(actData.start_time);
-                if( actData.end_time )
-                    actividad.end_time = new Date(actData.end_time);
+                if( actData.fecha )
+                    actividad.fecha = new Date(actData.fecha);
+                
                 actividad.description = actData.description;
                 actividad.lugar = { id_api_place: actData.lugarId } as any //Asumimos que el lugar ya existe
             return actividad;
