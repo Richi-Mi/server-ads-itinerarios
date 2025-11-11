@@ -32,13 +32,11 @@ const app = new Elysia()
   .error({
     'custom': CustomError
   })
-  .onError(({ code, error, set }) => { 
-    console.error(error);
+  .onError(({ code, error, status }) => { 
     
     if (code === 'custom') {
       const customError = error as CustomError;
-      set.status = customError.statusCode; 
-      return customError.toResponse();
+      return status( customError.statusCode, customError.toResponse());
     }
 
     if (code === 'VALIDATION')
