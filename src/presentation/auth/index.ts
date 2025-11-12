@@ -5,6 +5,12 @@ import { tokenPlugin } from "../../config/tokens"
 import { AuthController } from "./auth.controller"
 import { AuthModel } from "./auth.model"
 
+/**
+ * Modulo para el manejo de rutas de autenticación.
+ * @author Mendoza Castañeda José Ricardo.
+ * @link POST /register - Registro de usuario.
+ * @link PUT  / - Login de usuario.
+ */
 export const authRoutes = new Elysia({ prefix: "/auth", name: "Auth" })
     .decorate('authController', new AuthController())
     .use(tokenPlugin)
@@ -25,17 +31,4 @@ export const authRoutes = new Elysia({ prefix: "/auth", name: "Auth" })
         })
     }, {
         body: AuthModel.signInBody
-    })
-    .get("/verify-email", async ({ query: { email }, authController, status, tokenPlugin }) => {
-        if( !email )
-            return status(400, "Usuario con email no existe")
-        
-        const [isVerified, fotoUrl] = await authController.verifyEmail(email)
-
-        if( isVerified )
-            return status(200, file(fotoUrl) )
-
-        return status(400, "El correo no es válido")
-    }, {
-        query: AuthModel.verifyEmailQuery
     })
