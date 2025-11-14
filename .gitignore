@@ -42,7 +42,6 @@ package-lock.json
 **/*.bun
 
 .env
-db_poblate/
 uploads/*.jpg
 uploads/*.png
 uploads/*.jpeg
