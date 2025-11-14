@@ -82,11 +82,11 @@ export class UserController {
             where: [
                 { 
                     nombre_completo: searchPattern,
-                    privacity_mode: false 
+                    privacity_mode: true 
                 },
                 { 
                     username: searchPattern,
-                    privacity_mode: false 
+                    privacity_mode: true 
                 }
             ],
             
