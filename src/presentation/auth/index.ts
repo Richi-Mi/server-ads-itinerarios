@@ -13,7 +13,7 @@ import { AuthModel } from "./auth.model"
 export const authRoutes = new Elysia({ prefix: "/auth", name: "Auth" })
     .decorate('authController', new AuthController())
     .use(tokenPlugin)
-    .post("/register",  async ({ status, body, authController }) => {
+    .post("/register",  async ({ status, body, authController }) => {        
         const usuario = await authController.doRegister(body)
         return status(201, { message: `Usuario con ${usuario.correo} creado` })
     }, {
