@@ -6,10 +6,11 @@ import { userRoutes } from "./presentation/usuario";
 import { lugarRoutes } from "./presentation/lugares";
 import { itinerarioRoutes } from "./presentation/itinerario"
 import { actividadRoutes } from "./presentation/actividad"
-import { CustomError } from "./domain/CustomError";
 import { authRoutes } from "./presentation/auth";
 import { FileDataSource } from "./data/FileDataSource";
 import { publicacionRoutes } from "./presentation/publicacion";
+import { CustomError } from "./domain/CustomError";
+
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
@@ -20,7 +21,7 @@ const app = new Elysia()
     }
     catch (error) {
       console.error('Error al conectar con la base de datos:', error);
-      process.exit(1); 
+      process.exit(1);
     }
   })
   .onStop(async ({ decorator }: { decorator: any }) => { 
@@ -29,6 +30,7 @@ const app = new Elysia()
   .error({
     'custom': CustomError
   })
+  
   .onError(({ code, error, set }) => { 
     console.error(error); 
     
@@ -42,10 +44,10 @@ const app = new Elysia()
       set.status = 400; 
       return { message: (error as any).customError || 'Error de validación' };
     }
+    
     set.status = 500; 
     return { message: "Internal Server Error" };
   })
-
 
   .use(cors())
   .use(staticPlugin())
@@ -55,10 +57,16 @@ const app = new Elysia()
   .use(itinerarioRoutes)
   .use(actividadRoutes)
   .use(publicacionRoutes) 
+  .get('/fotos/:file', async ({ params, set }) => {
+      const fileDataSource = FileDataSource.getInstance();
+      const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
 
-  .get('/fotos/:file', ({ params, status }) => {
-      const fileDataSource = FileDataSource.getInstance()
-      return status(200, fileDataSource.getFileFromSource(`/fotos/${params.file}`))
+      if (!buffer || buffer.length === 0) {
+        throw new CustomError("Archivo no encontrado", 404);
+      }
+      set.headers['Content-Type'] = mimeType;
+      set.status = 200;
+      return buffer;
   }, {
       params: t.Object({
           file: t.String({ error: "El nombre del archivo debe ser un texto" })
@@ -66,8 +74,9 @@ const app = new Elysia()
   })
 
   .get("*", ({ status }) => {
-    return status(4404, { message: "Ruta no encontrada" });
+    return status(404, { message: "Ruta no encontrada" });
   })
+
   
   .listen(Bun.env.PORT)
 

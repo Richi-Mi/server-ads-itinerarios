@@ -1,12 +1,21 @@
 import Elysia, { t } from "elysia"; 
-
 import { UserModel } from "./usuario.model";
 import { UserController } from "./usuario.controller";
 import { authService } from "../services/auth.service";
 
+
+/**
+* Rutas implementadas para la gestión de la información del usuario.
+* @author Mendoza Castañeda José Ricardo
+* @link GET    /user            - Obtiene la información del usuario.
+* @link PUT    /user/update     - Actualiza información del usuario.
+* @link POST   /user/verify-password - Verifica si la contraseña es correcta.
+* @link PUT    /user/update-password - Actualiza la contraseña una vez verificada.
+* @link DELETE /user            - Elimina el usuario.
+*/
 export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
-    .use(authService)
-    .decorate('userController', new UserController())
+    .use(authService) 
+    .decorate('userController', new UserController()) 
 
     .get("/", async ({ status, store: { user: { correo } }, userController }) => {
         const user = await userController.getUserInfo(correo)
@@ -15,18 +24,14 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
 
         return status(200, { ...user })
     })
-
     .put("/update", async ({ status, store: { user: { correo } }, body, userController }) => {
         const { password, ...userUpdated } = await userController.updateUser(correo, body)
-
         if(!userUpdated)
             return status(404, "Usuario no encontrado")
-
         return status(200, { ...userUpdated})
     }, {
         body: UserModel.updateUserBody
     })
-
     .post("/verify-password", async ({ status, store: { user: { correo } }, body, userController }) => {
         const { password } = body;
         const isValid = await userController.verifyPassword(correo, password);
@@ -37,7 +42,6 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     }, {
         body: UserModel.verifyPasswordBody
     })
-
     .put("/update-password", async ({ status, store: { user: { correo }}, body, userController }) => {
         const { newPassword } = body; 
         await userController.updatePassword(correo, newPassword);
@@ -45,29 +49,19 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     }, {
         body: UserModel.updatePasswordBody
     })
-
     .delete("/", async ({ status, store: { user: { correo } }, userController }) => {
         const userDeleted = await userController.deleteUser(correo)
-
         if(!userDeleted)
             return status(404, "Usuario no encontrado")
         
         return status(201, { ...userDeleted })
     })
     
-    
-    .get("/search", async ({ status, query, userController }) => {
-        
-        // 1. Obtenemos el término de búsqueda desde la URL (ej: query.q)
+    .get("/search", async ({ status, query, userController, store }) => {
         const searchTerm = query.q;
-
-        // 2. Llamamos a nuestro nuevo método del controlador
         const users = await userController.searchTravelers(searchTerm);
-
-        // 3. Devolvemos los resultados
         return status(200, users);
-
     }, {
-        // 4. Validamos que el parámetro de consulta 'q' sea el que esperamos
         query: UserModel.searchQuery
     })
+  
