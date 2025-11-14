@@ -12,7 +12,7 @@ export const PostgresDataSource = new DataSource({
     database: Bun.env.DB_NAME,
     
     synchronize: true,
-    logging: true,
+    logging: false,
     entities: [Usuario, Amigo, Actividad, Itinerario, Lugar, Mensaje, Publicacion, Resena, Reporte, History],
     subscribers: [],
     migrations: []

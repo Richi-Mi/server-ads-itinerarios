@@ -4,9 +4,19 @@ import { LugarModel } from "./lugares.model";
 
 import { authService } from "../services/auth.service";
 
+// TODO: POST /registro Generar id's unicos al registrar lugares.
+// TODO: Checar la implementación de actualización de lugares.
+
+/**
+ * * Rutas implementadas para la gestión de lugares.
+ * @author Mendoza Castañeda José Ricardo.
+ * @author Gonzalez Lopez Alan Antonio.
+ * @link GET    /lugar     - Obtiene los lugares de manera paginada, con limites, etc.
+ * @link GET    /lugar/:id - Obtiene un lugar por su ID.
+ * @link DELETE /lugar     - Elimina un lugar por ID. (Solo administradores)
+ */
 export const lugarRoutes = new Elysia({ prefix: "/lugar", name: "Lugar" })
     .decorate('lugarController', new LugarController())
-    //Se usa authService con .use(authService) para proteger las rutas
     .use(authService)
     .get("/", async ({ status, lugarController, query }) => {
         const lugares = await lugarController.getAllLugares(query);
@@ -27,7 +37,6 @@ export const lugarRoutes = new Elysia({ prefix: "/lugar", name: "Lugar" })
         body: LugarModel.regLugarCuerpo
     })
     .put("/:id", async ({ status, params, body, lugarController  }) => {
-        // TODO: Check this route inmplementation.
         const lugarActualizado = await lugarController.updateLugar(params.id, body);
         return status(200, {...lugarActualizado});
     },{

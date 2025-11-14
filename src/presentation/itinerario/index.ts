@@ -1,59 +1,54 @@
 import Elysia from "elysia";
-import { ItinerarioController } from "./itinerario.controller";
+
 import { ItinerarioModel } from "./itinerario.model";
+import { ItinerarioController } from "./itinerario.controller";
 
 import { authService } from "../services/auth.service";
 
-import { t } from "elysia";
+// TODO: Probar la ruta de PUT /:id para actualizar itinerarios.
 
+/**
+ * * Rutas implementadas para la gestión de itinerarios.
+ * @author Mendoza Castañeda José Ricardo
+ * @author Gonzalez Lopez Alan Antonio.
+ * @link GET /itinerario          - Obtiene los itinerarios del usuario autenticado.
+ * @link GET /itinerario/:id      - Obtiene un itinerario por su ID.
+ * @link POST /itinerario/registro - Crea un nuevo itinerario.
+ * @link DELETE /itinerario/:id   - Elimina un itinerario por su ID.
+ */
 export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itinerario" })
     .decorate('itinerarioController', new ItinerarioController())
     .use(authService)
     .get("/", async ({ status, store, itinerarioController }) => {
-        try {
-            const itinerarios = await itinerarioController.getAllItinerarios(store.user);
-            return status(200, itinerarios);
-        }
-        catch (error) {            
-            throw error;
-        }
+        const itinerarios = await itinerarioController.getAllItinerarios(store.user);
+        return status(200, itinerarios);
     })
 
     .get("/:id", async ({ status, params, store, itinerarioController }) => {
-        try {
-            const itinerario = await itinerarioController.getItinerarioById(params.id, store.user);
-            return status(200, {...itinerario});
-        }
-        catch (error) {            
-            throw error;
-        }
+        const itinerario = await itinerarioController.getItinerarioById(params.id, store.user);
+        return status(200, { ...itinerario });    
     }, {
         params: ItinerarioModel.getItinerarioParams
     })
 
     .post("/registro", async ({ status, body, store, itinerarioController }) => {
-        try {
-            const nuevoItinerario = await itinerarioController.createItinerario(body, store.user);
-            return status(201, {...nuevoItinerario});
-        }
-        catch (error) {
-            throw error;
-        }
+        const nuevoItinerario = await itinerarioController.createItinerario(body, store.user);
+        return status(201, { ...nuevoItinerario });
     }, {
         body: ItinerarioModel.regItinerarioCuerpo
     })
 
     .put("/:id", async ({ status, params, body, store, itinerarioController  }) => {
         const itinerarioActualizado = await itinerarioController.updateItinerario(params.id, body, store.user);
-        return status(200, {...itinerarioActualizado});
+        return status(200, { ...itinerarioActualizado });
     },{
-        params: t.Object({ id: t.String() }),
+        params: ItinerarioModel.getItinerarioParams,
         body: ItinerarioModel.modItinerarioCuerpo,
     })
 
     .delete("/:id", async ({ status, params, store, itinerarioController }) => {
         const itinerarioBorrado = await itinerarioController.deleteItinerario(params.id, store.user);
-        return status(200, {...itinerarioBorrado});
+        return status(200, { ...itinerarioBorrado });
     },{
         params: ItinerarioModel.getItinerarioParams
     })

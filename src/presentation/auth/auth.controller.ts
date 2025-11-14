@@ -53,18 +53,4 @@ export class AuthController {
 
         return user
     }
-    public verifyEmail = async ( correo : string ) : Promise<[boolean, string]> => {
-        
-        const user = await this.userRepository.findOneBy({ correo })
-        // Verificamos qué el usuario exista.
-        if( !user )
-            return [false, ""]
-
-        // Marcamos el correo como verificado.
-        user.verified_email = true
-
-        await this.userRepository.save(user)
-
-        return [true, user.foto_url]
-    }
 }

@@ -1,23 +1,23 @@
-import Elysia, { t } from "elysia"; 
+import Elysia from "elysia"; 
 
 import { UserModel } from "./usuario.model";
-import { UserController } from "./usuario.controller";
 import { authService } from "../services/auth.service";
+import { UserController } from "./usuario.controller";
 
 /**
-* Rutas implementadas para la gestión de la información del usuario.
-* @author Mendoza Castañeda José Ricardo
-* @link GET    /user            - Obtiene la información del usuario.
-* @link PUT    /user/update     - Actualiza información del usuario.
-* @link POST   /user/verify-password - Verifica si la contraseña es correcta.
-* @link PUT    /user/update-password - Actualiza la contraseña una vez verificada.
-* @link DELETE /user            - Elimina el usuario.
-*/
+ * * Rutas implementadas para la gestión de la información del usuario.
+ * @author Mendoza Castañeda José Ricardo
+ * @link GET    /user                 - Obtiene la información del usuario.
+ * @link PUT    /user/update          - Actualiza información del usuario.
+ * @link POST   /user/verify-password - Verifica si la contraseña es correcta.
+ * @link PUT    /user/update-password - Actualiza la contraseña una vez verificada.
+ * @link DELETE /user                 - Elimina el usuario.
+ * @author Peredo Borgonio Daniel
+ * @link GET    /user/search          - Busca usuarios por nombre o correo.
+ */
 export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
-    .use(authService) // <-- Tu adición
-    .decorate('userController', new UserController()) // <-- De 'main'
-
-    // --- RUTAS ORIGINALES DE 'MAIN' (Restauradas) ---
+    .decorate('userController', new UserController())
+    .use(authService)
     .get("/", async ({ status, store: { user: { correo } }, userController }) => {
         const user = await userController.getUserInfo(correo)
         if( !user )
@@ -57,10 +57,7 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
         
         return status(201, { ...userDeleted })
     })
-    // --- Fin de Rutas Restauradas ---
-    
-    // --- Tu Nueva Ruta de Búsqueda ---
-    .get("/search", async ({ status, query, userController, store }) => {
+    .get("/search", async ({ status, query, userController }) => {
         const searchTerm = query.q;
         const users = await userController.searchTravelers(searchTerm);
         return status(200, users);

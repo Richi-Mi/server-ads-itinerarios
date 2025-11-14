@@ -24,7 +24,7 @@ export class UserController {
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
         if( user.foto_url )
-            await this.fileDataSource.deleteFile( user.foto_url );        
+            await this.fileDataSource.deleteFile( user.foto_url );
         
         await this.userRepository.remove(user);
         return user;

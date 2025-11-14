@@ -8,10 +8,7 @@ export class Actividad {
     id : number;
 
     @Column({ nullable: true })
-    start_time : Date;
-
-    @Column({ nullable: true })
-    end_time : Date;
+    fecha : Date;
 
     @Column()
     description : string;
