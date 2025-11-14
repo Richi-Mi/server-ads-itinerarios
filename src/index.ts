@@ -3,15 +3,12 @@ import cors from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { PostgresDataSource } from "./data/PostgresDataSource";
 import { userRoutes } from "./presentation/usuario";
-
 import { lugarRoutes } from "./presentation/lugares";
 import { itinerarioRoutes } from "./presentation/itinerario"
 import { actividadRoutes } from "./presentation/actividad"
-
 import { CustomError } from "./domain/CustomError";
 import { authRoutes } from "./presentation/auth";
 import { FileDataSource } from "./data/FileDataSource";
-
 import { publicacionRoutes } from "./presentation/publicacion";
 
 const app = new Elysia()
@@ -23,7 +20,7 @@ const app = new Elysia()
     }
     catch (error) {
       console.error('Error al conectar con la base de datos:', error);
-      process.exit(1);
+      process.exit(1); 
     }
   })
   .onStop(async ({ decorator }: { decorator: any }) => { 
@@ -33,7 +30,7 @@ const app = new Elysia()
     'custom': CustomError
   })
   .onError(({ code, error, set }) => { 
-    console.error(error);
+    console.error(error); 
     
     if (code === 'custom') {
       const customError = error as CustomError;
@@ -41,33 +38,37 @@ const app = new Elysia()
       return customError.toResponse();
     }
 
-    if (code === 'VALIDATION')
-      return status(400, { message: error.customError });
-
-    return status(500, { message: "Internal Server Error" });
+    if (code === 'VALIDATION') {
+      set.status = 400; 
+      return { message: (error as any).customError || 'Error de validación' };
+    }
+    set.status = 500; 
+    return { message: "Internal Server Error" };
   })
+
+
   .use(cors())
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
-
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
-  .get('/fotos/:file', async ({ params: { file }, set }) => {
-    // * Ruta para servir imagenes desde el sistema de archivos
-    const fileDataSource = FileDataSource.getInstance();
-    const { mimeType, buffer } = await fileDataSource.getFileFromSource(`${file}`);
+  .use(publicacionRoutes) 
 
-    if (!buffer || buffer.length === 0) 
-      throw new CustomError("Archivo no encontrado", 404);
-
-    // Return the response.
-    set.headers['Content-Type'] = mimeType;
-    set.status = 200; 
-    return buffer;
+  .get('/fotos/:file', ({ params, status }) => {
+      const fileDataSource = FileDataSource.getInstance()
+      return status(200, fileDataSource.getFileFromSource(`/fotos/${params.file}`))
+  }, {
+      params: t.Object({
+          file: t.String({ error: "El nombre del archivo debe ser un texto" })
+      })
   })
+
+  .get("*", ({ status }) => {
+    return status(4404, { message: "Ruta no encontrada" });
+  })
+  
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
-
