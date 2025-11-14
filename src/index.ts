@@ -13,8 +13,6 @@ import { authRoutes } from "./presentation/auth";
 import { CustomError } from "./domain/CustomError";
 import { FileDataSource } from "./data/FileDataSource";
 
-import { publicacionRoutes } from "./presentation/publicacion";
-
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
   .onStart(async ({ decorator }) => { 
@@ -33,7 +31,7 @@ const app = new Elysia()
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
-  .onError(({ code, error, status }) => { 
+  .onError(({ code, error, status }) => {     
     // * Control de errores.
     if (code === 'custom') {
       const customError = error as CustomError;
@@ -41,6 +39,9 @@ const app = new Elysia()
     }
     if (code === 'VALIDATION')
       return status(400, { message: error.customError });
+
+    if (code === 'NOT_FOUND')
+      return status(404, { message: "Recurso no encontrado" });
 
     return status(500, { message: "Internal Server Error" });
   })
@@ -51,18 +52,21 @@ const app = new Elysia()
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
-  .get('/fotos/:file', async ({ params: { file }, set }) => {
-    // * Ruta para servir imagenes desde el sistema de archivos
-    const fileDataSource = FileDataSource.getInstance();
-    const { mimeType, buffer } = await fileDataSource.getFileFromSource(`${file}`);
-
-    if (!buffer || buffer.length === 0) 
-      throw new CustomError("Archivo no encontrado", 404);
+  .get('/fotos/:file', async ({ params, set }) => {
+      const fileDataSource = FileDataSource.getInstance();
+      const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
 
     set.headers['Content-Type'] = mimeType;
     set.status = 200; 
     return buffer;
   })
+
+  
+  .get("*", ({ status }) => {
+    return status(404, { message: "Ruta no encontrada" });
+  })
+
+  
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
