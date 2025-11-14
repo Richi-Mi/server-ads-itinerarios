@@ -40,7 +40,7 @@ const app = new Elysia()
       return status( customError.statusCode, customError.toResponse());
     }
     if (code === 'VALIDATION')
-      return error.detail(error.message)
+      return status(400, { message: error.customError });
 
     return status(500, { message: "Internal Server Error" });
   })

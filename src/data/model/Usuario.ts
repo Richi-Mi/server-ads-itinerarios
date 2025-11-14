@@ -50,13 +50,7 @@ export class Usuario {
         default: true
     })
     privacity_mode : boolean    // true cuando el usuario no quiere que otros vean su informacion
-
-    @Column({
-        type: "boolean",
-        default: false
-    })
-    verified_email : boolean    // true cuando el usuario ha verificado su correo
-
+    
     @OneToMany(() => Amigo, amigo => amigo.receiving_user || amigo.requesting_user, { cascade: true } )
     amistades : Relation<Amigo[]>
 

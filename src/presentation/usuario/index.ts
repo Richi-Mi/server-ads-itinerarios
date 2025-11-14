@@ -1,13 +1,21 @@
 import Elysia from "elysia";
 
 import { UserModel } from "./usuario.model";
-import { UserController } from "./usuario.controller";
 import { authService } from "../services/auth.service";
+import { UserController } from "./usuario.controller";
 
-
+/**
+ * * Rutas implementadas para la gestión de la información del usuario.
+ * @author Mendoza Castañeda José Ricardo
+ * @link GET    /user                 - Obtiene la información del usuario.
+ * @link PUT    /user/update          - Actualiza información del usuario.
+ * @link POST   /user/verify-password - Verifica si la contraseña es correcta.
+ * @link PUT    /user/update-password - Actualiza la contraseña una vez verificada.
+ * @link DELETE /user                 - Elimina el usuario.
+ */
 export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
-    .use(authService)
     .decorate('userController', new UserController())
+    .use(authService)
     .get("/", async ({ status, store: { user: { correo } }, userController }) => {
         const user = await userController.getUserInfo(correo)
         if( !user )
