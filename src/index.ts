@@ -2,14 +2,15 @@ import Elysia, { t } from "elysia";
 import cors from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { PostgresDataSource } from "./data/PostgresDataSource";
+
 import { userRoutes } from "./presentation/usuario";
 import { lugarRoutes } from "./presentation/lugares";
 import { itinerarioRoutes } from "./presentation/itinerario"
 import { actividadRoutes } from "./presentation/actividad"
 import { authRoutes } from "./presentation/auth";
+import { CustomError } from "./domain/CustomError";
 import { FileDataSource } from "./data/FileDataSource";
 import { publicacionRoutes } from "./presentation/publicacion";
-import { CustomError } from "./domain/CustomError";
 
 
 const app = new Elysia()
@@ -32,7 +33,7 @@ const app = new Elysia()
   })
   
   .onError(({ code, error, set }) => { 
-    console.error(error); 
+    console.error(error);
     
     if (code === 'custom') {
       const customError = error as CustomError;
@@ -48,15 +49,19 @@ const app = new Elysia()
     set.status = 500; 
     return { message: "Internal Server Error" };
   })
+ 
 
   .use(cors())
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
+
+
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
   .use(publicacionRoutes) 
+
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
       const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
@@ -73,6 +78,7 @@ const app = new Elysia()
       })
   })
 
+  
   .get("*", ({ status }) => {
     return status(404, { message: "Ruta no encontrada" });
   })

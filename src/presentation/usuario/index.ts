@@ -1,8 +1,8 @@
 import Elysia, { t } from "elysia"; 
+
 import { UserModel } from "./usuario.model";
 import { UserController } from "./usuario.controller";
 import { authService } from "../services/auth.service";
-
 
 /**
 * Rutas implementadas para la gestión de la información del usuario.
@@ -14,9 +14,10 @@ import { authService } from "../services/auth.service";
 * @link DELETE /user            - Elimina el usuario.
 */
 export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
-    .use(authService) 
-    .decorate('userController', new UserController()) 
+    .use(authService) // <-- Tu adición
+    .decorate('userController', new UserController()) // <-- De 'main'
 
+    // --- RUTAS ORIGINALES DE 'MAIN' (Restauradas) ---
     .get("/", async ({ status, store: { user: { correo } }, userController }) => {
         const user = await userController.getUserInfo(correo)
         if( !user )
@@ -56,7 +57,9 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
         
         return status(201, { ...userDeleted })
     })
+    // --- Fin de Rutas Restauradas ---
     
+    // --- Tu Nueva Ruta de Búsqueda ---
     .get("/search", async ({ status, query, userController, store }) => {
         const searchTerm = query.q;
         const users = await userController.searchTravelers(searchTerm);
@@ -64,4 +67,3 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     }, {
         query: UserModel.searchQuery
     })
-  
