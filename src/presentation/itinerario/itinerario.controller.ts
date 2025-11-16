@@ -130,4 +130,25 @@ export class ItinerarioController {
         await this.itinerarioRepository.remove(itinerario);
         return itinerario;
     }
+
+    ///filtro de itinerarios
+    public buscarItinerarios = async ( buscarTerm?: string ): Promise<Itinerario[]> => {
+        if( !buscarTerm || buscarTerm?.trim() === "")
+            throw new CustomError("No hay terminos para buscar", 404);
+
+           
+        const term = `%${buscarTerm}%`;
+        return await this.itinerarioRepository
+            .createQueryBuilder("it")
+            .leftJoinAndSelect("it.owner", "owner") 
+            .leftJoinAndSelect("it.actividades", "act")
+            .leftJoinAndSelect("act.lugar", "lugar")
+            .where("it.title ILIKE :term", { term })
+            .orWhere("act.description ILIKE :term", { term })
+            .orWhere("lugar.nombre ILIKE :term", { term })
+            .orWhere("lugar.category ILIKE :term", { term })
+            //.orWhere("owner.username ILIKE :term", {term})
+            .limit(6)
+            .getMany(); 
+    }; 
 }

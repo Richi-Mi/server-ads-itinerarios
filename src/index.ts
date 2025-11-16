@@ -13,6 +13,10 @@ import { authRoutes } from "./presentation/auth";
 import { CustomError } from "./domain/CustomError";
 import { FileDataSource } from "./data/FileDataSource";
 
+
+import { publicacionRoutes } from "./presentation/publicacion";
+import { preferenciasRoutes } from "./presentation/preferencias";
+
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
   .onStart(async ({ decorator }) => { 
@@ -37,6 +41,7 @@ const app = new Elysia()
       const customError = error as CustomError;
       return status( customError.statusCode, customError.toResponse());
     }
+
     if (code === 'VALIDATION')
       return status(400, { message: error.customError });
 
@@ -44,11 +49,16 @@ const app = new Elysia()
       return status(404, { message: "Recurso no encontrado" });
 
     return status(500, { message: "Internal Server Error" });
+
   })
   .use(cors())
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
+
+
+  .use(preferenciasRoutes)
+
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)

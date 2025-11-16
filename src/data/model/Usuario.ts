@@ -5,6 +5,7 @@ import { Publicacion } from "./Publicacion";
 import { Resena } from "./Resena";
 import { Mensaje } from "./Mensaje";
 import { Reporte } from "./Reporte";
+import { Preferencias } from "./Preferencias";
 
 export enum UserRole {
     ADMIN = "admin",
@@ -68,4 +69,7 @@ export class Usuario {
 
     @OneToMany(() => Reporte, reporte => reporte.usuario_emitente, { cascade: true })
     reportes : Relation<Reporte[]>
+
+    @OneToMany(() => Preferencias, preferencias => preferencias.usuario, { cascade: true })
+    preferencias: Relation<Preferencias[]>
 }

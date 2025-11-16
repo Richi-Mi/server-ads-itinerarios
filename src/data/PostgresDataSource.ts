@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
-import { Actividad, Amigo, History, Itinerario, Lugar, Mensaje, Publicacion, Reporte, Resena, Usuario } from "./model";
+import { Actividad, Amigo, History, Itinerario, Lugar, Mensaje, Publicacion, Reporte, Resena, Usuario, Preferencias } from "./model";
+
 
 export const PostgresDataSource = new DataSource({
     
@@ -12,8 +13,10 @@ export const PostgresDataSource = new DataSource({
     database: Bun.env.DB_NAME,
     
     synchronize: true,
-    logging: false,
-    entities: [Usuario, Amigo, Actividad, Itinerario, Lugar, Mensaje, Publicacion, Resena, Reporte, History],
+
+    logging: true,
+    entities: [Usuario, Amigo, Actividad, Itinerario, Lugar, Mensaje, Publicacion, Resena, Reporte, History, Preferencias],
+
     subscribers: [],
     migrations: []
 

@@ -1,3 +1,7 @@
+
+import Elysia, { status } from "elysia";
+import { ItinerarioController } from "./itinerario.controller";
+
 import Elysia from "elysia";
 
 import { ItinerarioModel } from "./itinerario.model";
@@ -52,3 +56,17 @@ export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itine
     },{
         params: ItinerarioModel.getItinerarioParams
     })
+
+    
+    .get("/buscar", async ({ query, itinerarioController, status }) => {
+        const term = query.q; 
+        const resultados = await itinerarioController.buscarItinerarios(term)
+
+        if (resultados.length === 0)
+          return status(200, { message: "No se encontraron resultados" });
+
+        return status(200, resultados);
+    }, {
+        query: ItinerarioModel.buscarIti
+    }); 
+
