@@ -42,8 +42,10 @@ package-lock.json
 **/*.bun
 
 .env
-db_poblate/
 uploads/*.jpg
 uploads/*.png
 uploads/*.jpeg
 uploads/*.gif
+# Ignora la carpeta de datos de la base de datos de Docker
+/postgres-data
+/postgres-data-v2

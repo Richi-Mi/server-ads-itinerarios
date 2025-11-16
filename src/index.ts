@@ -1,23 +1,26 @@
 import Elysia, { t } from "elysia"; 
 import cors from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
+
 import { PostgresDataSource } from "./data/PostgresDataSource";
+
 import { userRoutes } from "./presentation/usuario";
-
 import { lugarRoutes } from "./presentation/lugares";
-import { itinerarioRoutes } from "./presentation/itinerario"
-import { actividadRoutes } from "./presentation/actividad"
+import { actividadRoutes } from "./presentation/actividad";
+import { itinerarioRoutes } from "./presentation/itinerario";
 
-import { CustomError } from "./domain/CustomError";
 import { authRoutes } from "./presentation/auth";
+import { CustomError } from "./domain/CustomError";
 import { FileDataSource } from "./data/FileDataSource";
+
 
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
-  .onStart(async ({ decorator }: { decorator: any }) => { 
+  .onStart(async ({ decorator }) => { 
+    // * Cuando el servidor se empieze: Intenta realizar la conexión e inicialización de la DB.
     try {
       console.log('Base de datos conectada');
       await decorator.pgdb.initialize();
@@ -27,58 +30,53 @@ const app = new Elysia()
       process.exit(1);
     }
   })
-  .onStop(async ({ decorator }: { decorator: any }) => { 
+  .onStop(async ({ decorator }) => { 
+    // * Cuando el servidor se detenga: Destruir la conexión a la base de datos.
     await decorator.pgdb.destroy();
   })
-  .error({
-    'custom': CustomError
-  })
-  .onError(({ code, error, set }) => { 
-    console.error(error);
-    
+  .error({ 'custom': CustomError })
+  .onError(({ code, error, status }) => {     
+    // * Control de errores.
     if (code === 'custom') {
       const customError = error as CustomError;
-      set.status = customError.statusCode; 
-      return customError.toResponse();
+      return status( customError.statusCode, customError.toResponse());
     }
-     if (code === 'VALIDATION') {
-    set.status = 400;
-    return { message: error.customError };
-  }
-  
 
-  set.status = 500;
-  return { message: "Internal Server Error" };
+    if (code === 'VALIDATION')
+      return status(400, { message: error.customError });
 
-    // if (code === 'VALIDATION')
-    //   return status(400, { message: error.customError });
+    if (code === 'NOT_FOUND')
+      return status(404, { message: "Recurso no encontrado" });
 
-    // return status(500, { message: "Internal Server Error" });
+    return status(500, { message: "Internal Server Error" });
+
   })
   .use(cors())
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
 
+
   .use(preferenciasRoutes)
 
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
-  .get('/fotos/:file', async ({ params: { file }, set }) => {
-    // * Ruta para servir imagenes desde el sistema de archivos
-    const fileDataSource = FileDataSource.getInstance();
-    const { mimeType, buffer } = await fileDataSource.getFileFromSource(`${file}`);
+  .get('/fotos/:file', async ({ params, set }) => {
+      const fileDataSource = FileDataSource.getInstance();
+      const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
 
-    if (!buffer || buffer.length === 0) 
-      throw new CustomError("Archivo no encontrado", 404);
-
-    // Return the response.
     set.headers['Content-Type'] = mimeType;
     set.status = 200; 
     return buffer;
   })
+
+  
+  .get("*", ({ status }) => {
+    return status(404, { message: "Ruta no encontrada" });
+  })
+
+  
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
-

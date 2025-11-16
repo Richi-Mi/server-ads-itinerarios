@@ -1,4 +1,5 @@
-export class CustomError extends Error{
+export class CustomError extends Error {
+
     constructor(
         public message: string, 
         public statusCode: number
@@ -10,4 +11,5 @@ export class CustomError extends Error{
     public toResponse() : { message: string } {
         return { message: this.message }
     }
+    
 }

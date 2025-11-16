@@ -24,4 +24,9 @@ export namespace UserModel {
 
     export type VerifyPasswordBody = typeof verifyPasswordBody.static
 
+    export const searchQuery = t.Object({
+        q: t.Optional(t.String()) 
+    })
+
+    export type SearchQuery = typeof searchQuery.static
 }

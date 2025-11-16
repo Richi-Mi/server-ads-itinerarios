@@ -1,24 +1,23 @@
 import { t } from "elysia";
 
 export namespace ItinerarioModel {
+    
     export const getItinerarioParams = t.Object({
         id: t.String()
     });
 
     export const regItinerarioCuerpo = t.Object({
-            title: t.String({ error: "Debe llevar un título el itinerario" }),
-            actividades: t.Optional(
-                t.Array(
-                    t.Object({
-                        start_time: t.Optional(t.String({ error: "Debe llevar una hora de inicio" })),
-                        end_time: t.Optional(t.String({ error: "Debe llevar una hora de fin" })),
-                        description: t.String({ error: "Debe llevar una descripción" }),
-                        lugarId: t.String({ error: "Debe llevar un lugar" })
-                    })
-                )
+        title: t.String({ error: "Debe llevar un título el itinerario" }),
+        actividades: t.Optional(
+            t.Array(
+                t.Object({
+                    fecha: t.Optional(t.String({ error: "Debe llevar una hora de inicio" })),
+                    description: t.String({ error: "Debe llevar una descripción" }),
+                    lugarId: t.String({ error: "Debe llevar un lugar" })
+                })
             )
-        }
-    );
+        )
+    });
 
     export type RegItinerarioCuerpo = typeof regItinerarioCuerpo.static;
 
