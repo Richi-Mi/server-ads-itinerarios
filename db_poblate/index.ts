@@ -1,13 +1,20 @@
+import "reflect-metadata"; 
+import { PostgresDataSource } from "../src/data/PostgresDataSource";
+import { Lugar } from "../src/data/model/Lugar";
+import path from "path";
+
 const poblarDB = async () => {
     try {
         await PostgresDataSource.initialize();
-
-        const jsonPath = path.join(__dirname, 'lugares_turisticos.json');
+        console.log("Conexión a la base de datos establecida para poblar datos...");
+        const jsonPath = path.join(import.meta.dir, 'lugares_turisticos.json');
         
         const jsonData = await Bun.file(jsonPath).json();
         const lugaresData = jsonData.lugares;
 
         const lugarRepository = PostgresDataSource.getRepository(Lugar);
+
+        console.log(`Iniciando la inserción de ${lugaresData.length} lugares...`);
 
         for (const lugarData of lugaresData) {
             const lugar = new Lugar();
@@ -25,11 +32,13 @@ const poblarDB = async () => {
             await lugarRepository.save(lugar);
         }
 
+        console.log("¡Éxito! Base de datos poblada con lugares.");
         await PostgresDataSource.destroy();
         
     } catch (error) {
         console.error('Error al poblar la base de datos:', error);
+        
         process.exit(1);
     }
 };
-poblarDB()
+poblarDB();

@@ -51,7 +51,12 @@ export class UserController {
         }
         
         await this.userRepository.save(user);
-        return user;
+        return {
+            ...user,
+            foto_url: user.foto_url
+                ? `http://localhost:3000/fotos/${user.foto_url}`
+                : ""
+        };
     }
     public updatePassword = async ( correo: string, newPassword: string ) : Promise<void> => {
         const user = await this.userRepository.findOne({ where: { correo } });
