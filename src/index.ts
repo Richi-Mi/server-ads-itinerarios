@@ -1,19 +1,14 @@
 import Elysia, { t } from "elysia"; 
 import cors from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
-
 import { PostgresDataSource } from "./data/PostgresDataSource";
-
 import { userRoutes } from "./presentation/usuario";
 import { lugarRoutes } from "./presentation/lugares";
 import { actividadRoutes } from "./presentation/actividad";
 import { itinerarioRoutes } from "./presentation/itinerario";
-
 import { authRoutes } from "./presentation/auth";
 import { CustomError } from "./domain/CustomError";
 import { FileDataSource } from "./data/FileDataSource";
-
-
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
 
@@ -64,11 +59,17 @@ const app = new Elysia()
   .use(actividadRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
-      const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
-
-    set.headers['Content-Type'] = mimeType;
-    set.status = 200; 
-    return buffer;
+      const { mimeType, buffer } = await fileDataSource.getFileFromSource(params.file); 
+      if (!buffer || buffer.length === 0) {
+        throw new CustomError("Archivo no encontrado", 404);
+      }
+      set.headers['Content-Type'] = mimeType;
+      set.status = 200;
+      return buffer;
+  }, {
+      params: t.Object({
+          file: t.String({ error: "El nombre del archivo debe ser un texto" })
+      })
   })
 
   
