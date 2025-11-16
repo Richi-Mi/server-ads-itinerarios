@@ -8,3 +8,4 @@ export * from './Publicacion'
 export * from './Resena'
 export * from './Reporte'
 export * from './History'
+export * from './Preferencias';

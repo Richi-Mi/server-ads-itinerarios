@@ -21,6 +21,11 @@ export class AuthController {
         const userExists = await this.userRepository.findOneBy({ correo })
         if( userExists )
             throw new CustomError("El correo ya está registrado", 409)
+        // verificar el username es necesario
+        const usernameExists = await this.userRepository.findOneBy({ username })
+        if( usernameExists )
+            throw new CustomError("El username ya existe", 409)
+
 
         // Creación del usuario
         const usuario = new Usuario()

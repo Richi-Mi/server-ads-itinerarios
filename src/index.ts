@@ -13,6 +13,7 @@ import { authRoutes } from "./presentation/auth";
 import { FileDataSource } from "./data/FileDataSource";
 
 import { publicacionRoutes } from "./presentation/publicacion";
+import { preferenciasRoutes } from "./presentation/preferencias";
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
@@ -40,16 +41,26 @@ const app = new Elysia()
       set.status = customError.statusCode; 
       return customError.toResponse();
     }
+     if (code === 'VALIDATION') {
+    set.status = 400;
+    return { message: error.customError };
+  }
+  
 
-    if (code === 'VALIDATION')
-      return status(400, { message: error.customError });
+  set.status = 500;
+  return { message: "Internal Server Error" };
 
-    return status(500, { message: "Internal Server Error" });
+    // if (code === 'VALIDATION')
+    //   return status(400, { message: error.customError });
+
+    // return status(500, { message: "Internal Server Error" });
   })
   .use(cors())
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
+
+  .use(preferenciasRoutes)
 
   .use(lugarRoutes)
   .use(itinerarioRoutes)

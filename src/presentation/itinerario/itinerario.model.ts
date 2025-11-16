@@ -29,4 +29,11 @@ export namespace ItinerarioModel {
     )
 
     export type ModItinerarioCuerpo = typeof modItinerarioCuerpo.static;
+
+    /// buscar itinerarios 
+    export const buscarIti = t.Object({
+        q: t.Optional(t.String())
+    })
+
+    export type BuscarIti = typeof buscarIti.static
 }
