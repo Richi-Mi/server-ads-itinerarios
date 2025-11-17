@@ -13,6 +13,18 @@ export class UserController {
         private fileDataSource = FileDataSource.getInstance()
     ) {}
 
+    public getAllUsers = async () => {
+        const usuarios = await this.userRepository.find({
+            relations: ['itinerarios']
+        });
+
+        /*Para que no se muestren las claves de los usuarios en /user/all*/
+        return usuarios.map(usuario => {
+            const { password, ...usuarioC } = usuario;
+            return usuarioC
+        });
+    }
+
     public getUserInfo = async ( correo: string ) : Promise<Usuario> => {
         const user = await this.userRepository.findOne({ where: { correo } })
         if( !user )
