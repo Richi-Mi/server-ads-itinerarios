@@ -110,4 +110,29 @@ export class UserController {
 
         return users;
     }
+    public getItineraryCount = async ( correo: string ) : Promise<number> => {
+        const user = await this.userRepository.findOne({ where: { correo } });
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+        
+        const itineraryAmount = await PostgresDataSource.getRepository("Itinerario")
+            .createQueryBuilder("itinerario")
+            .where("itinerario.ownerCorreo = :usuarioId", { usuarioId: correo })
+            .getCount();
+
+        return itineraryAmount;
+    }
+    public getFriendsCount = async ( correo: string ) : Promise<number> => {
+        const user = await this.userRepository.findOne({ where: { correo } });
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+        
+        const friendsAmount = await PostgresDataSource.getRepository("Amigo")
+            .createQueryBuilder("amigo")
+            .where("amigo.receiving_user = :usuarioId", { usuarioId: correo })
+            .orWhere("amigo.requesting_user = :usuarioId", { usuarioId: correo })
+            .getCount();
+
+        return friendsAmount;
+    }
 }
