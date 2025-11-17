@@ -4,7 +4,7 @@ import { UserModel } from "./usuario.model";
 import { PostgresDataSource } from "../../data/PostgresDataSource";
 import { FileDataSource } from "../../data/FileDataSource";
 import { CustomError } from "../../domain/CustomError";
-import { FindManyOptions, ILike, Like } from "typeorm"; 
+import { FindManyOptions, ILike } from "typeorm"; 
 
 export class UserController {
 
@@ -17,6 +17,10 @@ export class UserController {
         const user = await this.userRepository.findOne({ where: { correo } })
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
+
+        user.foto_url = user.foto_url
+                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
+                : ""
         return user;
     }
     public deleteUser = async ( correo: string ) : Promise<Usuario> => {
