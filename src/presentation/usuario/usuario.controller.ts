@@ -34,30 +34,23 @@ export class UserController {
         const user = await this.userRepository.findOne({ where: { correo } });
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
-
         user.username = body.username || user.username;
         user.nombre_completo = body.nombre_completo || user.nombre_completo;
-        if (body.privacity_mode === "true") {
-            user.privacity_mode = true;
-        } else if (body.privacity_mode === "false") {
-            user.privacity_mode = false;
+        if (body.privacity_mode !== undefined) {
+            user.privacity_mode = body.privacity_mode === "true";
         }
-
-        if( body.foto ) {
-            if( user.foto_url )
-                await this.fileDataSource.deleteFile( user.foto_url );
+        if (body.foto) {
             
-            user.foto_url = await this.fileDataSource.saveFile( body.foto );
+            if (user.foto_url) {
+                await this.fileDataSource.deleteFile(user.foto_url);
+            }
+            const nuevaFotoUrl = await this.fileDataSource.saveFile(body.foto);
+            user.foto_url = nuevaFotoUrl;
         }
-        
         await this.userRepository.save(user);
-        return {
-            ...user,
-            foto_url: user.foto_url
-                ? `http://localhost:3000/fotos/${user.foto_url}`
-                : ""
-        };
-    }
+        return user;
+    };
+
     public updatePassword = async ( correo: string, newPassword: string ) : Promise<void> => {
         const user = await this.userRepository.findOne({ where: { correo } });
         if( !user )

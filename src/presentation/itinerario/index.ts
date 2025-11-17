@@ -1,11 +1,8 @@
 
 import Elysia, { status } from "elysia";
 import { ItinerarioController } from "./itinerario.controller";
-
-import Elysia from "elysia";
-
 import { ItinerarioModel } from "./itinerario.model";
-import { ItinerarioController } from "./itinerario.controller";
+
 
 import { authService } from "../services/auth.service";
 

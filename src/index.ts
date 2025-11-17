@@ -15,7 +15,7 @@ import { preferenciasRoutes } from "./presentation/preferencias";
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
   .onStart(async ({ decorator }) => { 
-    // * Cuando el servidor se empieze: Intenta realizar la conexión e inicialización de la DB.
+    
     try {
       console.log('Base de datos conectada');
       await decorator.pgdb.initialize();
@@ -26,12 +26,12 @@ const app = new Elysia()
     }
   })
   .onStop(async ({ decorator }) => { 
-    // * Cuando el servidor se detenga: Destruir la conexión a la base de datos.
+    
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
   .onError(({ code, error, status }) => {     
-    // * Control de errores.
+ 
     if (code === 'custom') {
       const customError = error as CustomError;
       return status( customError.statusCode, customError.toResponse());
@@ -57,6 +57,7 @@ const app = new Elysia()
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
+  .use(publicacionRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
       const { mimeType, buffer } = await fileDataSource.getFileFromSource(params.file); 
