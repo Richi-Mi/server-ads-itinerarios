@@ -46,15 +46,13 @@ export class UserController {
         if( body.foto ) {
             if( user.foto_url )
                 await this.fileDataSource.deleteFile( user.foto_url );
-            
             user.foto_url = await this.fileDataSource.saveFile( body.foto );
-        }
-        
+        }        
         await this.userRepository.save(user);
         return {
             ...user,
             foto_url: user.foto_url
-                ? `http://localhost:3000/fotos/${user.foto_url}`
+                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
                 : ""
         };
     }

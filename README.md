@@ -43,4 +43,8 @@ HOST="http://localhost:3000"
 
 3. Cuando termines tus cambios NO unas tu rama con la rama principal (main) desde tu computadora, crea un pull request para unir tus cambios a la rama principal.
 
-4. Espera a qué tus cambios sean resueltos y en caso de, realiza los cambios necesarios
+4. En caso de conflictos, une primero la rama main a tu rama, resuelve los conflictos y vuelve al pull request.
+
+5. En caso de qué hayas añadido rutas al servidor manda foto de las pruebas realizadas.
+
+6. Espera a qué tus cambios sean resueltos y en caso de, realiza los cambios necesarios
