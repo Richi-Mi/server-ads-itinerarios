@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryColumn, VirtualColumn, type Relation } from "typeorm"
+import { Column, Entity, OneToMany, PrimaryColumn, type Relation } from "typeorm"
 import { Actividad } from "./Actividad"
 
 @Entity()
