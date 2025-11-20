@@ -19,6 +19,7 @@ import { authService } from "../services/auth.service";
  * @link GET /itinerario/:id      - Obtiene un itinerario por su ID.
  * @link POST /itinerario/registro - Crea un nuevo itinerario.
  * @link DELETE /itinerario/:id   - Elimina un itinerario por su ID.
+ * 
  */
 export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itinerario" })
     .decorate('itinerarioController', new ItinerarioController())

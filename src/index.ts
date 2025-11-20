@@ -16,6 +16,8 @@ import { FileDataSource } from "./data/FileDataSource";
 
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
+import { amigoRoutes } from "./presentation/amigo";
+import { recomendacionRoutes } from "./presentation/preferencias/recomendacion";
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
@@ -58,6 +60,8 @@ const app = new Elysia()
 
 
   .use(preferenciasRoutes)
+  .use(recomendacionRoutes)
+  .use(amigoRoutes)
 
   .use(lugarRoutes)
   .use(itinerarioRoutes)
