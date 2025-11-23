@@ -15,9 +15,14 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
             id: t.Numeric({ error: "El ID debe ser un número" })
         })
     })
-
     .use(authService)
-    
+
+    .get("/", async ({ status, store, publicacionController }) => {
+        const userCorreo = store.user.correo;
+        const publicaciones = await publicacionController.getMyPublications(userCorreo);
+        return status(200, publicaciones);
+    })
+
     .post("/share/:id", async ({ params, body, store, publicacionController, status }) => {
         
         const itinerarioId = Number(params.id);

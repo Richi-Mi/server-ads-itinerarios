@@ -4,7 +4,7 @@ import { UserModel } from "./usuario.model";
 import { PostgresDataSource } from "../../data/PostgresDataSource";
 import { FileDataSource } from "../../data/FileDataSource";
 import { CustomError } from "../../domain/CustomError";
-import { FindManyOptions, ILike, Like } from "typeorm"; 
+import { FindManyOptions, ILike } from "typeorm"; 
 
 export class UserController {
 
@@ -17,6 +17,10 @@ export class UserController {
         const user = await this.userRepository.findOne({ where: { correo } })
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
+
+        user.foto_url = user.foto_url
+                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
+                : ""
         return user;
     }
     public deleteUser = async ( correo: string ) : Promise<Usuario> => {
@@ -39,18 +43,20 @@ export class UserController {
         if (body.privacity_mode !== undefined) {
             user.privacity_mode = body.privacity_mode === "true";
         }
-        if (body.foto) {
-            
-            if (user.foto_url) {
-                await this.fileDataSource.deleteFile(user.foto_url);
-            }
-            const nuevaFotoUrl = await this.fileDataSource.saveFile(body.foto);
-            user.foto_url = nuevaFotoUrl;
-        }
-        await this.userRepository.save(user);
-        return user;
-    };
 
+        if( body.foto ) {
+            if( user.foto_url )
+                await this.fileDataSource.deleteFile( user.foto_url );
+            user.foto_url = await this.fileDataSource.saveFile( body.foto );
+        }        
+        await this.userRepository.save(user);
+        return {
+            ...user,
+            foto_url: user.foto_url
+                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
+                : ""
+        };
+    }
     public updatePassword = async ( correo: string, newPassword: string ) : Promise<void> => {
         const user = await this.userRepository.findOne({ where: { correo } });
         if( !user )
@@ -100,5 +106,30 @@ export class UserController {
         const users = await this.userRepository.find(options);
 
         return users;
+    }
+    public getItineraryCount = async ( correo: string ) : Promise<number> => {
+        const user = await this.userRepository.findOne({ where: { correo } });
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+        
+        const itineraryAmount = await PostgresDataSource.getRepository("Itinerario")
+            .createQueryBuilder("itinerario")
+            .where("itinerario.ownerCorreo = :usuarioId", { usuarioId: correo })
+            .getCount();
+
+        return itineraryAmount;
+    }
+    public getFriendsCount = async ( correo: string ) : Promise<number> => {
+        const user = await this.userRepository.findOne({ where: { correo } });
+        if( !user )
+            throw new CustomError("Usuario no encontrado", 404);
+        
+        const friendsAmount = await PostgresDataSource.getRepository("Amigo")
+            .createQueryBuilder("amigo")
+            .where("amigo.receiving_user = :usuarioId", { usuarioId: correo })
+            .orWhere("amigo.requesting_user = :usuarioId", { usuarioId: correo })
+            .getCount();
+
+        return friendsAmount;
     }
 }

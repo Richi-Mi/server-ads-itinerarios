@@ -50,10 +50,7 @@ const app = new Elysia()
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
-
-
   .use(preferenciasRoutes)
-
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
@@ -77,8 +74,6 @@ const app = new Elysia()
   .get("*", ({ status }) => {
     return status(404, { message: "Ruta no encontrada" });
   })
-
-  
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
