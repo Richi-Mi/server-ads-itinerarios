@@ -60,17 +60,20 @@ export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itine
         params: ItinerarioModel.getItinerarioParams
     })
 
-    
     .get("/buscar", async ({ query, itinerarioController, status }) => {
-        const term = query.q; 
-        const resultados = await itinerarioController.buscarItinerarios(term)
+        const term = query.q;
+        const category = query.category; // Leemos el filtro
+        const state = query.state;       // Leemos el filtro
+
+        // Pasamos los 3 argumentos al controlador
+        const resultados = await itinerarioController.buscarItinerarios(term, category, state);
 
         if (resultados.length === 0)
           return status(200, { message: "No se encontraron resultados" });
 
         return status(200, resultados);
     }, {
-        query: ItinerarioModel.buscarIti
+        query: ItinerarioModel.buscarIti // Usamos el modelo actualizado
     })
     
     .post("/recommendation", async ({ status, body, recommendationController }) => {
