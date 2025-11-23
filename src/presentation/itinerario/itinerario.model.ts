@@ -31,7 +31,9 @@ export namespace ItinerarioModel {
 
     /// buscar itinerarios 
     export const buscarIti = t.Object({
-        q: t.Optional(t.String())
+        q: t.Optional(t.String()),        // Término de búsqueda general
+        category: t.Optional(t.String()), // Nuevo filtro
+        state: t.Optional(t.String())     // Nuevo filtro
     })
 
     export type BuscarIti = typeof buscarIti.static

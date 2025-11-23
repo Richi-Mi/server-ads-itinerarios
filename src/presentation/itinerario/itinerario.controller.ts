@@ -2,7 +2,7 @@ import { PostgresDataSource } from "../../data/PostgresDataSource";
 import { Actividad, Itinerario, Usuario } from "../../data/model";
 import { CustomError } from "../../domain/CustomError";
 import { ItinerarioModel } from "./itinerario.model";
-
+import { Brackets } from "typeorm";
 interface AuthUser{
     correo: string;
     //role: string;
@@ -132,23 +132,33 @@ export class ItinerarioController {
     }
 
     ///filtro de itinerarios
-    public buscarItinerarios = async ( buscarTerm?: string ): Promise<Itinerario[]> => {
-        if( !buscarTerm || buscarTerm?.trim() === "")
-            throw new CustomError("No hay terminos para buscar", 404);
+    public buscarItinerarios = async ( 
+        buscarTerm?: string, 
+        categoria?: string, 
+        estado?: string 
+    ): Promise<Itinerario[]> => {
 
-           
-        const term = `%${buscarTerm}%`;
-        return await this.itinerarioRepository
-            .createQueryBuilder("it")
+        const query = this.itinerarioRepository.createQueryBuilder("it")
             .leftJoinAndSelect("it.owner", "owner") 
             .leftJoinAndSelect("it.actividades", "act")
-            .leftJoinAndSelect("act.lugar", "lugar")
-            .where("it.title ILIKE :term", { term })
-            .orWhere("act.description ILIKE :term", { term })
-            .orWhere("lugar.nombre ILIKE :term", { term })
-            .orWhere("lugar.category ILIKE :term", { term })
-            //.orWhere("owner.username ILIKE :term", {term})
-            .limit(6)
-            .getMany(); 
-    }; 
+            .leftJoinAndSelect("act.lugar", "lugar");
+        if (categoria) {
+            query.andWhere("lugar.category = :categoria", { categoria });
+        }
+        if (estado) {
+            query.andWhere("lugar.mexican_state = :estado", { estado });
+        }
+        if (buscarTerm && buscarTerm.trim() !== "") {
+            const term = `%${buscarTerm}%`;
+            query.andWhere(new Brackets(qb => {
+                qb.where("it.title ILIKE :term", { term })
+                  .orWhere("act.description ILIKE :term", { term })
+                  .orWhere("lugar.nombre ILIKE :term", { term })
+            }));
+        }
+        if (!buscarTerm && !categoria && !estado) {
+             throw new CustomError("Debe proporcionar al menos un término de búsqueda o un filtro.", 400);
+        }
+        return await query.limit(10).getMany();
+    };
 }
