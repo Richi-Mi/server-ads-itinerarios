@@ -16,6 +16,7 @@ import { authService } from "../services/auth.service";
  * @link GET /itinerario/:id      - Obtiene un itinerario por su ID.
  * @link POST /itinerario/registro - Crea un nuevo itinerario.
  * @link DELETE /itinerario/:id   - Elimina un itinerario por su ID.
+ * 
  * * Rutas implementadas para la recomendación de lugares y optimización de rutas en la creación de itinerario.
  * @author Aguilar Souza Iker Itzae
  * @link Post /itinerario/recommendation   - Recomienda lugares con base en los lugares y busqueda proporcionada.

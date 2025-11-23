@@ -52,8 +52,10 @@ export class Usuario {
     })
     privacity_mode : boolean    // true cuando el usuario no quiere que otros vean su informacion
     
-    @OneToMany(() => Amigo, amigo => amigo.receiving_user || amigo.requesting_user, { cascade: true } )
-    amistades : Relation<Amigo[]>
+    @OneToMany(() => Amigo, amigo => amigo.receiving_user,{ cascade: true } )
+    amistadesRecibidas : Relation<Amigo[]>
+    @OneToMany(() => Amigo, amigo => amigo.requesting_user, { cascade: true } )
+    amistadesEnviadas : Relation<Amigo[]>
 
     @OneToMany(() => Itinerario, itinerario => itinerario.owner, { cascade: true } )
     itinerarios : Relation<Itinerario[]>
