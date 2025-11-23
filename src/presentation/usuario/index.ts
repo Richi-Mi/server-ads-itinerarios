@@ -19,11 +19,17 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     .decorate('userController', new UserController())
     .use(authService)
     .get("/", async ({ status, store: { user: { correo } }, userController }) => {
-        const user = await userController.getUserInfo(correo)
+
+        const [user, itineraryCount, friendsCount] = await Promise.all([
+            userController.getUserInfo(correo),
+            userController.getItineraryCount(correo),
+            userController.getFriendsCount(correo)
+        ]);
+        
         if( !user )
             return status(404)
 
-        return status(200, { ...user })
+        return status(200, { ...user, itineraryCount, friendsCount })
     })
     .put("/update", async ({ status, store: { user: { correo } }, body, userController }) => {
         const { password, ...userUpdated } = await userController.updateUser(correo, body)

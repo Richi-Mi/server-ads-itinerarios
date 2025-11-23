@@ -6,7 +6,8 @@ export namespace LugarModel {
         pague: t.Optional(t.Number({ default: 1 })),
         limit: t.Optional(t.Number({ default: 10 })),
         category: t.Optional(t.String()),
-        mexican_state: t.Optional(t.String())
+        mexican_state: t.Optional(t.String()),
+        nombre: t.Optional(t.String())
     });
 
     export type GetLugaresQuery = typeof getLugaresQuery.static;
@@ -17,7 +18,7 @@ export namespace LugarModel {
 
     export const regLugarCuerpo = t.Object( //Para registrar el lugar
         {
-            id_api_place: t.String(),
+            id_api_place: t.Optional(t.String()),
             category: t.String(),
             mexican_state: t.String(),
             nombre: t.String(),

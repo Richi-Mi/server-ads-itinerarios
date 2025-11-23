@@ -1,5 +1,5 @@
 import { t } from "elysia"; 
-import { Preferencias } from "../../data/model/Preferencias";
+
 export namespace PreferenciasModel {
 
     export const regisAnswer = t.Object({

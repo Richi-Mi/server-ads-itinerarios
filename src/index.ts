@@ -1,19 +1,14 @@
 import Elysia, { t } from "elysia"; 
 import cors from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
-
 import { PostgresDataSource } from "./data/PostgresDataSource";
-
 import { userRoutes } from "./presentation/usuario";
 import { lugarRoutes } from "./presentation/lugares";
 import { actividadRoutes } from "./presentation/actividad";
 import { itinerarioRoutes } from "./presentation/itinerario";
-
 import { authRoutes } from "./presentation/auth";
 import { CustomError } from "./domain/CustomError";
 import { FileDataSource } from "./data/FileDataSource";
-
-
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
 import { amigoRoutes } from "./presentation/amigo";
@@ -22,7 +17,7 @@ import { recomendacionRoutes } from "./presentation/preferencias/recomendacion";
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
   .onStart(async ({ decorator }) => { 
-    // * Cuando el servidor se empieze: Intenta realizar la conexión e inicialización de la DB.
+    
     try {
       console.log('Base de datos conectada');
       await decorator.pgdb.initialize();
@@ -33,12 +28,12 @@ const app = new Elysia()
     }
   })
   .onStop(async ({ decorator }) => { 
-    // * Cuando el servidor se detenga: Destruir la conexión a la base de datos.
+    
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
   .onError(({ code, error, status }) => {     
-    // * Control de errores.
+ 
     if (code === 'custom') {
       const customError = error as CustomError;
       return status( customError.statusCode, customError.toResponse());
@@ -57,30 +52,32 @@ const app = new Elysia()
   .use(staticPlugin())
   .use(authRoutes)
   .use(userRoutes)
-
-
   .use(preferenciasRoutes)
   .use(recomendacionRoutes)
   .use(amigoRoutes)
-
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
+  .use(publicacionRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
-      const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
-
-    set.headers['Content-Type'] = mimeType;
-    set.status = 200; 
-    return buffer;
+      const { mimeType, buffer } = await fileDataSource.getFileFromSource(params.file); 
+      if (!buffer || buffer.length === 0) {
+        throw new CustomError("Archivo no encontrado", 404);
+      }
+      set.headers['Content-Type'] = mimeType;
+      set.status = 200;
+      return buffer;
+  }, {
+      params: t.Object({
+          file: t.String({ error: "El nombre del archivo debe ser un texto" })
+      })
   })
 
   
   .get("*", ({ status }) => {
     return status(404, { message: "Ruta no encontrada" });
   })
-
-  
   .listen(Bun.env.PORT)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
