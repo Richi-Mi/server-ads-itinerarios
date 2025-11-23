@@ -38,13 +38,10 @@ export class UserController {
         const user = await this.userRepository.findOne({ where: { correo } });
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
-
         user.username = body.username || user.username;
         user.nombre_completo = body.nombre_completo || user.nombre_completo;
-        if (body.privacity_mode === "true") {
-            user.privacity_mode = true;
-        } else if (body.privacity_mode === "false") {
-            user.privacity_mode = false;
+        if (body.privacity_mode !== undefined) {
+            user.privacity_mode = body.privacity_mode === "true";
         }
 
         if( body.foto ) {

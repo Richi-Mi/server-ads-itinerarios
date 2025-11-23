@@ -1,12 +1,9 @@
 
 import Elysia, { status } from "elysia";
-
-import { ItinerarioModel } from "./itinerario.model";
 import { ItinerarioController } from "./itinerario.controller";
-
+import { ItinerarioModel } from "./itinerario.model";
 import { RecommendationController } from "./recommendation.controller";
 import { RecommendationModel } from "./recommendation.model";
-
 import { authService } from "../services/auth.service";
 
 // TODO: Probar la ruta de PUT /:id para actualizar itinerarios.
