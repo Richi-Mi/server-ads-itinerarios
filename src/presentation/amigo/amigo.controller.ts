@@ -101,4 +101,62 @@ export class AmigoController {
         return listF;
 
     }
+
+    async getFriendsOfFriends(correo: string): Promise<string[]> {
+        const amigosDirectos = await this.amigoRepository.find({
+            where: [
+                { 
+                    requesting_user: { correo }, 
+                    status: FriendRequestState.FRIEND 
+                },
+                { 
+                    receiving_user: { correo }, 
+                    status: FriendRequestState.FRIEND 
+                }
+            ],
+            relations: ['requesting_user', 'receiving_user']
+        });
+
+        if (amigosDirectos.length === 0) {
+            return [];
+        }
+
+        const correosAmigosDirectos = amigosDirectos.map(amigo => 
+            amigo.requesting_user.correo === correo 
+                ? amigo.receiving_user.correo 
+                : amigo.requesting_user.correo
+        );
+
+        const amigosDeAmigos = await this.amigoRepository
+            .createQueryBuilder("amigo")
+            .leftJoinAndSelect("amigo.requesting_user", "requesting_user")
+            .leftJoinAndSelect("amigo.receiving_user", "receiving_user")
+            .where("amigo.status = :status", { status: FriendRequestState.FRIEND })
+            .andWhere(
+                "(amigo.requesting_user.correo IN (:...correosAmigos) OR amigo.receiving_user.correo IN (:...correosAmigos))",
+                { correosAmigos: correosAmigosDirectos }
+            )
+            .getMany();
+
+        const sugerencias = new Set<string>();
+        
+        amigosDeAmigos.forEach(amigo => {
+            const correoRequesting = amigo.requesting_user.correo;
+            const correoReceiving = amigo.receiving_user.correo;
+
+            if (correosAmigosDirectos.includes(correoRequesting)) {
+                if (correoReceiving !== correo && !correosAmigosDirectos.includes(correoReceiving)) {
+                    sugerencias.add(correoReceiving);
+                }
+            }
+            
+            if (correosAmigosDirectos.includes(correoReceiving)) {
+                if (correoRequesting !== correo && !correosAmigosDirectos.includes(correoRequesting)) {
+                    sugerencias.add(correoRequesting);
+                }
+            }
+        });
+
+        return Array.from(sugerencias);
+    }
 }

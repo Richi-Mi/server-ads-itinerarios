@@ -9,4 +9,9 @@ export namespace AmigoModel {
         state: t.Union([ t.Literal(0), t.Literal(1), t.Literal(2), t.Literal(3)])
         //action: t.Enum(["ACCEPT", "REJECT"]),
     }); 
+
+    export const amigosDeAmigosResponse = t.Object({
+        message: t.String(),
+        data: t.Array(t.String())
+    });
 }
