@@ -31,8 +31,6 @@ export class UserController {
             throw new CustomError("Usuario no encontrado", 404);
 
         user.foto_url = user.foto_url
-                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
-                : ""
         return user;
     }
     public deleteUser = async ( correo: string ) : Promise<Usuario> => {
@@ -65,8 +63,6 @@ export class UserController {
         return {
             ...user,
             foto_url: user.foto_url
-                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
-                : ""
         };
     }
     public updatePassword = async ( correo: string, newPassword: string ) : Promise<void> => {
