@@ -135,6 +135,6 @@ const PORT = Number(Bun.env.PORT ?? 4000);
 //Se inicia el servidor HTTP que comparten ELysia y Socketio
 server.listen(PORT, () => {
   // console.log(`🦊 Elysia and Socket.io is running at http://localhost:${PORT}`);
-  console.log(`🦊 Elysia and Socket.io is running at https://harol-lovers.up.railway.app:${PORT}`);
+  console.log(`🦊 Elysia and Socket.io is running at https://harol-lovers.up.railway.app${PORT}`);
 });
 //console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
