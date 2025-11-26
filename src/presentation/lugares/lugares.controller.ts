@@ -1,3 +1,4 @@
+import { Like } from "typeorm";
 import { PostgresDataSource } from "../../data/PostgresDataSource";
 import { Lugar } from "../../data/model";
 import { CustomError } from "../../domain/CustomError";
@@ -9,11 +10,12 @@ export class LugarController {
         private lugarRepository = PostgresDataSource.getRepository(Lugar)
     ) {}
 
-    public getAllLugares = async ({ pague, limit, category, mexican_state}: LugarModel.GetLugaresQuery): Promise<Lugar[]> => {
+    public getAllLugares = async ({ pague, limit, category, mexican_state, nombre}: LugarModel.GetLugaresQuery): Promise<Lugar[]> => {
 
         const whereClause: any = {};
         category && (whereClause.category = category);
         mexican_state && (whereClause.mexican_state = mexican_state);
+        nombre && (whereClause.nombre = Like(`%${nombre}%`))
         
         const lugares = await this.lugarRepository.find({
             take: limit || 10,
@@ -44,10 +46,13 @@ export class LugarController {
 
     public createLugar = async ( data: LugarModel.RegLugarCuerpo ) : Promise<Lugar> => {
         // Verificar que el lugar no exista.
-        const existe = await this.lugarRepository.findOneBy({ id_api_place: data.id_api_place })
-        if( existe )
-            throw new CustomError("El lugar ya está registrado", 409)
-
+        if(!data.id_api_place) 
+            data.id_api_place = crypto.randomUUID()
+        else {
+            const existe = await this.lugarRepository.findOneBy({ id_api_place: data.id_api_place })
+            if( existe )
+                throw new CustomError("El lugar ya está registrado", 409)
+        }
         const lugar = this.lugarRepository.create(data);
        
         await this.lugarRepository.save(lugar)

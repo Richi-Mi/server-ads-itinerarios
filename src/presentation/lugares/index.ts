@@ -4,7 +4,6 @@ import { LugarModel } from "./lugares.model";
 
 import { authService } from "../services/auth.service";
 
-// TODO: POST /registro Generar id's unicos al registrar lugares.
 // TODO: Checar la implementación de actualización de lugares.
 
 /**
@@ -14,6 +13,7 @@ import { authService } from "../services/auth.service";
  * @link GET    /lugar     - Obtiene los lugares de manera paginada, con limites, etc.
  * @link GET    /lugar/:id - Obtiene un lugar por su ID.
  * @link DELETE /lugar     - Elimina un lugar por ID. (Solo administradores)
+ * @link POST   /registro  - Registra un nuevo lugar a la base de datos.
  */
 export const lugarRoutes = new Elysia({ prefix: "/lugar", name: "Lugar" })
     .decorate('lugarController', new LugarController())

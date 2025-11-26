@@ -21,7 +21,6 @@ export class PreferenciasController {
             throw new CustomError("El correo no esta la base de datos", 404); 
 
     const preferencias = this.preferenciaRepository.create({
-       //correo, 
        usuario: userExists, 
        lugares_preferidos: data.lugares_preferidos ?? [],
        estados_visitados: data.estados_visitados ?? [],

@@ -24,18 +24,18 @@ import { FileDataSource } from "./data/FileDataSource";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import { funcionesSockets } from "./sockets/socketHandler";
+import { recomendacionRoutes } from "./presentation/preferencias/recomendacion";
+import { amigoRoutes } from "./presentation/amigo";
 /*================================================================*/
 
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
   .onStop(async ({ decorator }) => { 
-    // * Cuando el servidor se detenga: Destruir la conexión a la base de datos.
+    
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
   .onError(({ code, error, status }) => {     
-    // * Control de errores.
-    console.log(error);
     if (code === 'custom') {
       const customError = error as CustomError;
       return status( customError.statusCode, customError.toResponse());
@@ -52,20 +52,28 @@ const app = new Elysia()
   })
   .use(cors())
   .use(staticPlugin())
-
   .use(authRoutes)
   .use(userRoutes)
   .use(preferenciasRoutes)
+  .use(recomendacionRoutes)
+  .use(amigoRoutes)
   .use(lugarRoutes)
   .use(itinerarioRoutes)
   .use(actividadRoutes)
+  .use(publicacionRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
-      const { mimeType, buffer } = await fileDataSource.getFileFromSource(`/fotos/${params.file}`);
-
-    set.headers['Content-Type'] = mimeType;
-    set.status = 200; 
-    return buffer;
+      const { mimeType, buffer } = await fileDataSource.getFileFromSource(params.file); 
+      if (!buffer || buffer.length === 0) {
+        throw new CustomError("Archivo no encontrado", 404);
+      }
+      set.headers['Content-Type'] = mimeType;
+      set.status = 200;
+      return buffer;
+  }, {
+      params: t.Object({
+          file: t.String({ error: "El nombre del archivo debe ser un texto" })
+      })
   })
 
 
