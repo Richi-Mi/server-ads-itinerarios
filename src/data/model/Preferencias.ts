@@ -5,6 +5,7 @@ import { Usuario } from "./Usuario";
 export class Preferencias {
     @PrimaryGeneratedColumn()
     id : number; 
+
     @ManyToOne(() => Usuario, user => user.preferencias, { eager: true })
     @JoinColumn({ name: "correo", referencedColumnName: "correo" })
     usuario : Relation<Usuario>;
@@ -20,6 +21,5 @@ export class Preferencias {
 
     @Column("text", { array: true, nullable: true })
     actividades_preferidas : string[]; 
-
-
+    
 }

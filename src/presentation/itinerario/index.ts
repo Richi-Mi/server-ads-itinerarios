@@ -1,12 +1,18 @@
 
 import Elysia, { status } from "elysia";
 import { ItinerarioController } from "./itinerario.controller";
+<<<<<<< HEAD
 
 // import Elysia from "elysia";
 
 import { ItinerarioModel } from "./itinerario.model";
 // import { ItinerarioController } from "./itinerario.controller";
 
+=======
+import { ItinerarioModel } from "./itinerario.model";
+import { RecommendationController } from "./recommendation.controller";
+import { RecommendationModel } from "./recommendation.model";
+>>>>>>> main
 import { authService } from "../services/auth.service";
 
 // TODO: Probar la ruta de PUT /:id para actualizar itinerarios.
@@ -19,9 +25,15 @@ import { authService } from "../services/auth.service";
  * @link GET /itinerario/:id      - Obtiene un itinerario por su ID.
  * @link POST /itinerario/registro - Crea un nuevo itinerario.
  * @link DELETE /itinerario/:id   - Elimina un itinerario por su ID.
+ * 
+ * * Rutas implementadas para la recomendación de lugares y optimización de rutas en la creación de itinerario.
+ * @author Aguilar Souza Iker Itzae
+ * @link Post /itinerario/recommendation   - Recomienda lugares con base en los lugares y busqueda proporcionada.
+ * @link Post /itinerario/optimization   - Recomienda una ruta optimizada con base en el algorítmo 3-opt.
  */
 export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itinerario" })
     .decorate('itinerarioController', new ItinerarioController())
+    .decorate('recommendationController', new RecommendationController())
     .use(authService)
     .get("/", async ({ status, store, itinerarioController }) => {
         const itinerarios = await itinerarioController.getAllItinerarios(store.user);
@@ -57,16 +69,41 @@ export const itinerarioRoutes = new Elysia({ prefix: "/itinerario", name: "Itine
         params: ItinerarioModel.getItinerarioParams
     })
 
-    
     .get("/buscar", async ({ query, itinerarioController, status }) => {
-        const term = query.q; 
-        const resultados = await itinerarioController.buscarItinerarios(term)
+        const term = query.q;
+        const category = query.category; // Leemos el filtro
+        const state = query.state;       // Leemos el filtro
+
+        // Pasamos los 3 argumentos al controlador
+        const resultados = await itinerarioController.buscarItinerarios(term, category, state);
 
         if (resultados.length === 0)
           return status(200, { message: "No se encontraron resultados" });
 
         return status(200, resultados);
     }, {
-        query: ItinerarioModel.buscarIti
+        query: ItinerarioModel.buscarIti // Usamos el modelo actualizado
+    })
+    
+    .post("/recommendation", async ({ status, body, recommendationController }) => {
+        const { lugarIds, query, limit } = body;
+
+        const recommended = await recommendationController.getRecommendedPlacesFromList(
+            lugarIds,
+            query,
+            limit
+        );
+        return status(200, recommended);
+    }, {
+        body: RecommendationModel.postRecommendationBody
+    })
+
+    
+    .post("/optimization", async ({ status, body, recommendationController }) => {
+        const { lugarIds } = body;
+        const optimizedRoute = await recommendationController.optimizeRoute(lugarIds);
+        return status(200, optimizedRoute);
+    }, {
+        body: RecommendationModel.postOptimizationBody
     }); 
 

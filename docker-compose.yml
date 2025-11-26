@@ -2,16 +2,16 @@ version: '3.8'
 services:
   db:
     image: postgres:15
-    container_name: sharepath-db-local-v2 
+    container_name: sharepath-db-local-v2
     restart: always
     environment:
-      POSTGRES_USER: postgres 
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: sharepath_dev
     ports:
-      - "5433:5432" # <-- CAMBIO 2: Usaremos el puerto 5433 en tu máquina
+      - "5433:5432"
     volumes:
-      - ./postgres-data-v2:/var/lib/postgresql/data # 
+      - ./postgres-data-v2:/var/lib/postgresql/data
 
 volumes:
-  postgres-data-v2: 
+  postgres-data-v2:
