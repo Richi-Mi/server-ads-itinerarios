@@ -101,8 +101,12 @@ export class AmigoController {
         return listF;
 
     }
-
-    async getFriendsOfFriends(correo: string): Promise<string[]> {
+    async getFriendsOfFriends(correo: string): Promise<{ 
+        username: string; 
+        nombre_completo: string; 
+        correo: string; 
+        foto_url: string | null 
+    }[]> {
         const amigosDirectos = await this.amigoRepository.find({
             where: [
                 { 
@@ -138,7 +142,12 @@ export class AmigoController {
             )
             .getMany();
 
-        const sugerencias = new Set<string>();
+        const sugerenciasMap = new Map<string, { 
+            username: string; 
+            nombre_completo: string; 
+            correo: string; 
+            foto_url: string | null 
+        }>();
         
         amigosDeAmigos.forEach(amigo => {
             const correoRequesting = amigo.requesting_user.correo;
@@ -146,17 +155,29 @@ export class AmigoController {
 
             if (correosAmigosDirectos.includes(correoRequesting)) {
                 if (correoReceiving !== correo && !correosAmigosDirectos.includes(correoReceiving)) {
-                    sugerencias.add(correoReceiving);
+                    const usuario = amigo.receiving_user;
+                    sugerenciasMap.set(usuario.correo, {
+                        username: usuario.username,
+                        nombre_completo: usuario.nombre_completo,
+                        correo: usuario.correo,
+                        foto_url: usuario.foto_url
+                    });
                 }
             }
             
             if (correosAmigosDirectos.includes(correoReceiving)) {
                 if (correoRequesting !== correo && !correosAmigosDirectos.includes(correoRequesting)) {
-                    sugerencias.add(correoRequesting);
+                    const usuario = amigo.requesting_user;
+                    sugerenciasMap.set(usuario.correo, {
+                        username: usuario.username,
+                        nombre_completo: usuario.nombre_completo,
+                        correo: usuario.correo,
+                        foto_url: usuario.foto_url
+                    });
                 }
             }
         });
 
-        return Array.from(sugerencias);
+        return Array.from(sugerenciasMap.values());
     }
 }

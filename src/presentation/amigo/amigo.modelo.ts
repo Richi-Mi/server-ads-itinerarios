@@ -10,8 +10,15 @@ export namespace AmigoModel {
         //action: t.Enum(["ACCEPT", "REJECT"]),
     }); 
 
+    export const usuarioSugerido = t.Object({
+        username: t.String(),
+        nombre_completo: t.String(),
+        correo: t.String(),
+        foto_url: t.Union([t.String(), t.Null()])
+    });
+
     export const amigosDeAmigosResponse = t.Object({
         message: t.String(),
-        data: t.Array(t.String())
+        data: t.Array(usuarioSugerido)
     });
 }
