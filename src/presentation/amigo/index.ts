@@ -10,8 +10,10 @@ import { Amigo, Usuario } from "../../data/model";
  * @author Fenix
  * @link POST /solicitud    ->   body  "receiving": "friend email or username add " - Enviar una solicitud 
  * @link PUT  /respond      ->  body  "Id": num "state": num_action    - Responder solicitud
- * @link GET  /pendiente     - Ver lista de solicitudes aun no respondidas 
+ * @link GET  /pendiente    - Ver lista de solicitudes aun no respondidas 
  * @link GET  /             - Ver lista de friends 
+ * @link GET  /search        - buscar amigo x username
+ * @link DELATE /:username   - Eliminar amigo por username
  */
 export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
  .use(authService)
@@ -38,12 +40,25 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
  .get("/pendiente", async ({ store: { user }, amigoController }) => {
     const requests = await amigoController.listRequest(user.correo);
     if (requests.length === 0)
-        //return { message: "No tienes solicitudes aun" };
+        return { message: "No tienes solicitudes aun" };
 
     return { message: "Solicitudes encontradas: ", data: requests };
   })
 
- .get("/", async ({ store, amigoController }) => {
+  .get("/", async ({ store, amigoController }) => {
     return amigoController.listFriend(store.user.correo);
   })
- 
+
+  .get("/search", async ({ store: { user }, query, amigoController }) => {
+    const searchTerm = query.q;
+    const friends = await amigoController.searchFriend(user.correo, searchTerm);
+
+    return { message: "Amigos encontrados", data: friends };
+   }, {
+   query: AmigoModel.searchFriend
+   })
+
+   .delete("/:username", async ({ store: { user }, params, amigoController }) => {
+      const resp = await amigoController.removeFriend(user.username, params.username);
+      return { message: "Amigo eliminado", data: resp };
+    });

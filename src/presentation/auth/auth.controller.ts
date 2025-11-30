@@ -58,4 +58,14 @@ export class AuthController {
 
         return user
     }
+
+    public doLoginGoogle = async (email: string): Promise<Usuario> => {
+    const user = await this.userRepository.findOneBy({ correo: email })
+
+    if (!user) 
+        throw new CustomError("Usuario no encontrado", 404)
+
+    return user 
+    }
+
 }

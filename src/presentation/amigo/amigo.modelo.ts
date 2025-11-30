@@ -8,4 +8,6 @@ export namespace AmigoModel {
         Id: t.Number(), 
         state: t.Union([ t.Literal(0), t.Literal(1), t.Literal(2), t.Literal(3)])
     }); 
+
+    export const searchFriend = t.Object({ q: t.String() }); 
 }

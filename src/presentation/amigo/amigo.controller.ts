@@ -11,6 +11,34 @@ export class AmigoController {
         private userRepository:  Repository<Usuario> 
     ) {}
 
+    private friend(correoA: string, correoB?: string) {
+        if(correoB) {
+            return [
+                {
+                    requesting_user: { correo: correoA },
+                    receiving_user: { correo: correoB },
+                    status: FriendRequestState.FRIEND 
+                }, 
+                {
+                    requesting_user: { correo: correoB },
+                    receiving_user: { correo: correoA },
+                    status: FriendRequestState.FRIEND
+                }
+            ]; 
+        }
+        return [
+            {
+                requesting_user: { correo: correoA },
+                status: FriendRequestState.FRIEND
+            },
+            {
+                receiving_user: { correo: correoA },
+                status: FriendRequestState.FRIEND
+
+            }
+        ]; 
+    }
+
     async sendRequest(sender: string, receiving: string) {
         if ( sender === receiving)
             throw new CustomError("No puedes enviarte una solicitud a ti", 400); 
@@ -22,26 +50,19 @@ export class AmigoController {
             throw new CustomError("Este usuario no existe ", 404); 
 
         const friendRequest = await this.amigoRepository.findOne({ 
-            where: { requesting_user: {correo: sender}, receiving_user: { correo: receiving} } }); 
+            where: { 
+                requesting_user: { username: senderUser.username },
+                receiving_user: { username: receivingUser.username }
+            } 
+        }); 
 
         if ( friendRequest )
             throw new CustomError("Ya existe una solicitud de amistad", 400); 
 
         const friendship = await this.amigoRepository.findOne({
-            where: [
-                {
-                    requesting_user: { correo: senderUser.username }, 
-                    receiving_user: { correo: receivingUser.username }, 
-                    status: FriendRequestState.FRIEND
-                }, 
-                {
-                    requesting_user: { correo: receivingUser.username}, 
-                    receiving_user: { correo: senderUser.username}, 
-                    status: FriendRequestState.FRIEND
-                }
-            ]
-            
+            where: this.friend(senderUser.correo, receivingUser.correo)
         }); 
+
         if ( friendship )
             throw new CustomError("Ya eres amigo de este viajero", 400); 
 
@@ -90,20 +111,43 @@ export class AmigoController {
 
     async listFriend(correo: string) {
         const listF = await this.amigoRepository.find({
-            where: [
-                {
-                    requesting_user: { correo }, 
-                    status: FriendRequestState.FRIEND
-                },
-                {
-                    receiving_user: { correo },
-                    status: FriendRequestState.FRIEND
-                 }
-            ], 
+            where: this.friend(correo), 
             relations: ["requesting_user", "receiving_user"]
         });
         if(listF.length === 0)
             throw new CustomError("No tienes amigos aun :(", 400); 
         return listF;
+    }
+    
+    async  searchFriend(correo: string, query: string ) {
+        const listF = await this.amigoRepository.find({
+            where: this.friend(correo), 
+            relations: ["requesting_user", "receiving_user"]
+        }); 
+
+        const list = listF.map(a =>
+        a.requesting_user.correo === correo
+            ? a.receiving_user
+            : a.requesting_user
+        );
+
+        const q = query.toLowerCase(); 
+       
+        return list.filter(u =>
+            u.username.toLowerCase().includes(q)
+        );
+
+    }
+
+    async removeFriend(user: string, friend: string ) {
+
+        const relation = await this.amigoRepository.findOne({
+            where: this.friend(user, friend)
+        });
+
+        if(!relation)
+            throw new CustomError("Ya no son amigos ", 404); 
+
+        return this.amigoRepository.remove(relation); 
     }
 }
