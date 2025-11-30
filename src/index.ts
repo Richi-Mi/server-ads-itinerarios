@@ -99,7 +99,7 @@ const server = createServer(async (req, res) => {
     const request = new Request(url, {
       method: req.method,
       headers: req.headers as Record<string, string>,
-      body: req.method !== "GET" && req.method !== "HEAD" ? req: undefined,
+      body: (req.method !== "GET" && req.method !== "HEAD" ? req: undefined) as any,
     });
 
     const response = await app.handle(request); //wait for elysia handle request
