@@ -30,6 +30,9 @@ export class Lugar {
     @Column({ nullable: true })
     total_reviews : number
 
+    @Column({ nullable: true, type: "text" })
+    descripcion: string
+
     @OneToMany( () => Actividad, actividad => actividad.lugar, { cascade: true})
     actividades : Relation<Actividad[]>
 }
