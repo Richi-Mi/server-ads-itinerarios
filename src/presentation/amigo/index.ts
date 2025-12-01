@@ -8,13 +8,11 @@ import { Amigo, Usuario } from "../../data/model";
 /**
  * * Rutas CRUD FRIENDSHIP
  * @author Fenix
- * @link POST /solicitud    ->   body  "receiving": "friend email or username add " - Enviar una solicitud 
+ * @link POST /solicitud    ->   body  "receiving": "friend email add" - Enviar una solicitud 
  * @link PUT  /respond      ->  body  "Id": num "state": num_action    - Responder solicitud
  * @link GET  /pendiente    - Ver lista de solicitudes aun no respondidas 
  * @link GET  /             - Ver lista de friends 
- * @link GET  /search        - buscar amigo x username
- * @link DELETE /:username   - Eliminar amigo por username
- *
+ * 
  * * Ruta para la recomendación de amigos de amigos.
  * @author Aguilar Souza Iker Itzae
  * @link GET /amigo/sugerencias   - Recomienda lugares con base en los lugares y busqueda proporcionada.
@@ -23,7 +21,7 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
    .use(authService)
    .decorate("amigoController", new AmigoController(PostgresDataSource.getRepository(Amigo), PostgresDataSource.getRepository(Usuario)))
    .post("/solicitud", async ({ store: { user }, body, amigoController }) => {
-      const res = await amigoController.sendRequest(user.username, body.receiving);
+      const res = await amigoController.sendRequest(user.correo, body.receiving);
       return { message: "Solicitud enviada", data: res };
    },
       { body: AmigoModel.envioSolicitud })
@@ -58,16 +56,6 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
         };
     });
 
-  .get("/search", async ({ store: { user }, query, amigoController }) => {
-    const searchTerm = query.q;
-    const friends = await amigoController.searchFriend(user.correo, searchTerm);
 
-    return { message: "Amigos encontrados", data: friends };
-   }, {
-   query: AmigoModel.searchFriend
-   })
 
-   .delete("/:username", async ({ store: { user }, params, amigoController }) => {
-      const resp = await amigoController.removeFriend(user.username, params.username);
-      return { message: "Amigo eliminado", data: resp };
-    });
+ 
