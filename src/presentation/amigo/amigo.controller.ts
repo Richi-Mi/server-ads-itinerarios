@@ -2,6 +2,7 @@ import { Amigo, FriendRequestState } from "../../data/model";
 import { Usuario } from "../../data/model";
 
 import { PostgresDataSource } from "../../data/PostgresDataSource";
+import { FileDataSource } from "../../data/FileDataSource";
 import { CustomError } from "../../domain/CustomError";
 import { Repository } from "typeorm";
 
@@ -11,73 +12,47 @@ export class AmigoController {
         private userRepository:  Repository<Usuario> 
     ) {}
 
-    private friend(correoA: string, correoB?: string) {
-        if(correoB) {
-            return [
-                {
-                    requesting_user: { correo: correoA },
-                    receiving_user: { correo: correoB },
-                    status: FriendRequestState.FRIEND 
-                }, 
-                {
-                    requesting_user: { correo: correoB },
-                    receiving_user: { correo: correoA },
-                    status: FriendRequestState.FRIEND
-                }
-            ]; 
-        }
-        return [
-            {
-                requesting_user: { correo: correoA },
-                status: FriendRequestState.FRIEND
-            },
-            {
-                receiving_user: { correo: correoA },
-                status: FriendRequestState.FRIEND
-
-            }
-        ]; 
-    }
-
     async sendRequest(sender: string, receiving: string) {
         if ( sender === receiving)
             throw new CustomError("No puedes enviarte una solicitud a ti", 400); 
-
-        const senderUser = await this.userRepository.findOne({ where: [ { correo: sender }, { username: sender } ]}); 
-        const receivingUser = await this.userRepository.findOne({ where: [ { correo: receiving }, { username : receiving } ] }); 
+        const senderUser = await this.userRepository.findOne({ where: { correo: sender } }); 
+        const receivingUser = await this.userRepository.findOne({ where: { correo: receiving } }); 
 
         if (!senderUser || !receivingUser)
             throw new CustomError("Este usuario no existe ", 404); 
 
         const friendRequest = await this.amigoRepository.findOne({ 
-            where: { 
-                requesting_user: { username: senderUser.username },
-                receiving_user: { username: receivingUser.username }
-            } 
-        }); 
-
+            where: { requesting_user: {correo: sender}, receiving_user: { correo: receiving} } }); 
         if ( friendRequest )
-            throw new CustomError("Ya existe una solicitud de amistad", 400); 
+            throw new CustomError("Existe una solicitud de amistad", 400); 
 
         const friendship = await this.amigoRepository.findOne({
-            where: this.friend(senderUser.correo, receivingUser.correo)
+            where: [
+                {
+                    requesting_user: { correo: sender}, 
+                    receiving_user: { correo: receiving}, 
+                    status: FriendRequestState.FRIEND
+                }, 
+                {
+                    requesting_user: { correo: receiving}, 
+                    receiving_user: { correo: sender}, 
+                    status: FriendRequestState.FRIEND
+                }
+            ]
+            
         }); 
-
-        if ( friendship )
+        if ( friendRequest )
             throw new CustomError("Ya eres amigo de este viajero", 400); 
 
         const createRequest = this.amigoRepository.create({
             requesting_user: { correo: senderUser.correo}, 
             receiving_user: { correo: receivingUser.correo }, 
             status: FriendRequestState.PENDING
-        }); 
+        } as any); 
         
-        const save = await this.amigoRepository.save(createRequest); 
-
-        return this.amigoRepository.findOne({ where: { id: save.id }, relations: { requesting_user : true, receiving_user: true } }); 
+        return this.amigoRepository.save(createRequest); 
             
     }
-
     async respondRequest(requestId: number, action: "FRIEND" | "REJECT", user: string) {
         const req = await this.amigoRepository.findOne({
             where: { id: requestId}, 
@@ -96,7 +71,6 @@ export class AmigoController {
         return this.amigoRepository.save(req);
 
     }
-
     async listRequest(correo: string) {
         const listR = await this.amigoRepository.find({
             where: {
@@ -111,44 +85,21 @@ export class AmigoController {
 
     async listFriend(correo: string) {
         const listF = await this.amigoRepository.find({
-            where: this.friend(correo), 
-            relations: ["requesting_user", "receiving_user"]
+            where: [
+                {
+                    requesting_user: { correo }, 
+                    status: FriendRequestState.FRIEND
+                },
+                {
+                    receiving_user: { correo },
+                     status: FriendRequestState.FRIEND
+                 }
+            ]
         });
         if(listF.length === 0)
             throw new CustomError("No tienes amigos aun :(", 400); 
         return listF;
-    }
-    
-    async  searchFriend(correo: string, query: string ) {
-        const listF = await this.amigoRepository.find({
-            where: this.friend(correo), 
-            relations: ["requesting_user", "receiving_user"]
-        }); 
 
-        const list = listF.map(a =>
-        a.requesting_user.correo === correo
-            ? a.receiving_user
-            : a.requesting_user
-        );
-
-        const q = query.toLowerCase(); 
-       
-        return list.filter(u =>
-            u.username.toLowerCase().includes(q)
-        );
-
-    }
-
-    async removeFriend(user: string, friend: string ) {
-
-        const relation = await this.amigoRepository.findOne({
-            where: this.friend(user, friend)
-        });
-
-        if(!relation)
-            throw new CustomError("Ya no son amigos ", 404); 
-
-        return this.amigoRepository.remove(relation); 
     }
     async getFriendsOfFriends(correo: string): Promise<{ 
         username: string; 
