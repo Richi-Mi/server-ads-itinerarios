@@ -46,6 +46,10 @@ export class FileDataSource {
       );
     }
   } 
+  public saveFiles(fotos: File[]): Promise<string[]> {
+    const savePromises = fotos.map((foto) => this.saveFile(foto));
+    return Promise.all(savePromises);
+  }
 
   public async deleteFile(filePath: string): Promise<void> {
     try {

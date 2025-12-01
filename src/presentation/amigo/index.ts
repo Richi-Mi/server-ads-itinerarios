@@ -13,41 +13,50 @@ import { Amigo, Usuario } from "../../data/model";
  * @link GET  /pendiente    - Ver lista de solicitudes aun no respondidas 
  * @link GET  /             - Ver lista de friends 
  * @link GET  /search        - buscar amigo x username
- * @link DELATE /:username   - Eliminar amigo por username
+ * @link DELETE /:username   - Eliminar amigo por username
+ *
+ * * Ruta para la recomendación de amigos de amigos.
+ * @author Aguilar Souza Iker Itzae
+ * @link GET /amigo/sugerencias   - Recomienda lugares con base en los lugares y busqueda proporcionada.
  */
 export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
- .use(authService)
- .decorate("amigoController", new AmigoController(PostgresDataSource.getRepository(Amigo), PostgresDataSource.getRepository(Usuario)))
+   .use(authService)
+   .decorate("amigoController", new AmigoController(PostgresDataSource.getRepository(Amigo), PostgresDataSource.getRepository(Usuario)))
+   .post("/solicitud", async ({ store: { user }, body, amigoController }) => {
+      const res = await amigoController.sendRequest(user.username, body.receiving);
+      return { message: "Solicitud enviada", data: res };
+   },
+      { body: AmigoModel.envioSolicitud })
 
- .post("/solicitud", async ({ store: { user }, body, amigoController }) => {
-    const res = await amigoController.sendRequest(user.correo, body.receiving ); 
+   .put("/respond", async ({ store: { user }, body, amigoController }) => {
+      let action: "FRIEND" | "REJECT";
+      if (body.state === 1) action = "FRIEND";
+      else if (body.state === 2) action = "REJECT";
+      else throw new Error("Estado de respuesta inválido");
+      const res = await amigoController.respondRequest(body.Id, action, user.correo);
+      return { message: "Solicitud actualizada", data: res };
+   },
+      { body: AmigoModel.respondSolicitud })
 
-    return { message: "Solicitud enviada", data: res  };
+   .get("/pendiente", async ({ store: { user }, amigoController }) => {
+      const requests = await amigoController.listRequest(user.correo);
+      if (requests.length === 0)
+         return { message: "No tienes solicitudes" };
 
- }, { body: AmigoModel.envioSolicitud})
+      return { message: "Solicitudes encontradas", data: requests };
+   })
 
- .put("/respond", async ({ store: { user }, body, amigoController }) => {
-    let action: "FRIEND" | "REJECT"; 
-    if (body.state === 1) action = "FRIEND";
-    else if (body.state === 2) action = "REJECT";
-    else throw new Error("Estado de respuesta invalido");
-    const res = await amigoController.respondRequest(body.Id, action, user.correo ); 
+   .get("/", async ({ store, amigoController }) => {
+      return amigoController.listFriend(store.user.correo);
+   })
 
-    return { message: "Solicitud actualizada", data: res  };
-
-   }, { body: AmigoModel.respondSolicitud }) 
-
- .get("/pendiente", async ({ store: { user }, amigoController }) => {
-    const requests = await amigoController.listRequest(user.correo);
-    if (requests.length === 0)
-        return { message: "No tienes solicitudes aun" };
-
-    return { message: "Solicitudes encontradas: ", data: requests };
-  })
-
-  .get("/", async ({ store, amigoController }) => {
-    return amigoController.listFriend(store.user.correo);
-  })
+  .get("/sugerencias", async ({ store: { user }, amigoController }) => {
+        const sugerencias = await amigoController.getFriendsOfFriends(user.correo);
+        return { 
+            message: "Sugerencias de amigos encontradas", 
+            data: sugerencias 
+        };
+    });
 
   .get("/search", async ({ store: { user }, query, amigoController }) => {
     const searchTerm = query.q;

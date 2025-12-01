@@ -2,7 +2,11 @@ import Elysia from "elysia";
 
 import { UserModel } from "./usuario.model";
 import { authService } from "../services/auth.service";
+import { authRole } from "../services/auth.service";
 import { UserController } from "./usuario.controller";
+
+import { AuthController } from "../auth/auth.controller";
+import { AuthModel } from "../auth/auth.model";
 
 /**
  * * Rutas implementadas para la gestión de la información del usuario.
@@ -14,10 +18,20 @@ import { UserController } from "./usuario.controller";
  * @link DELETE /user                 - Elimina el usuario.
  * @author Peredo Borgonio Daniel
  * @link GET    /user/search          - Busca usuarios por nombre o correo.
+ * 
+ * @admin
+ * @link GET    /all                    - Ver todos los usuarios y sus itinerarios (no se si se quede asi).
+ * @link PUT    /admin/:correo          - Actualizar los datos de un usuario, se indica cual por el correo.
+ * @link POST   /admin/register         - Registrar un usuario.
+ * @link DELETE /admin/:correo          - Eliminar un usuario, se indica cual por el correo.
  */
+
 export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     .decorate('userController', new UserController())
+
     .use(authService)
+
+    /************ Rutas para usuarios (rol user) ****************/
     .get("/", async ({ status, store: { user: { correo } }, userController }) => {
 
         const [user, itineraryCount, friendsCount] = await Promise.all([
@@ -69,4 +83,46 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
         return status(200, users);
     }, {
         query: UserModel.searchQuery
+    })
+
+    /************ Rutas para admins (rol admin) ****************/
+    /* Registrar un usuario */
+    .post("/admin/register",  async ({ status, body}) => {        
+        const authController = new AuthController();
+        const usuario = await authController.doRegister(body)
+        return status(201, { message: `Usuario con ${usuario.correo} creado` })
+    }, {
+        body: AuthModel.signUpBody,
+        beforeHandle: authRole("admin")
+    })
+
+    /* Ver todos los usuarios */
+    .get("/all", async ({ userController }) => {
+            const usuarios = await userController.getAllUsers();
+            return usuarios;
+    }, {
+        beforeHandle: authRole("admin")
+    })
+
+    /* Actualizar los datos de un usuario */
+    .put("/admin/:correo", async ({ status, params: { correo }, body, userController }) => {
+        const { password, ...userUpdated } = await userController.updateUser(correo, body)
+        if(!userUpdated)
+            return status(404, "Usuario no encontrado")
+        return status(200, { ...userUpdated})
+    }, {
+        body: UserModel.updateUserBody,
+        beforeHandle: authRole("admin")
+    })
+
+    /* Eliminar un usuario */
+    .delete("/admin/:correo", async ({ status, params: { correo }, userController }) => {
+        // const {password, ...usuarioEliminado} = await userController.deleteUser(correo);
+        const usuarioEliminado = await userController.deleteUser(correo);
+
+        //if(!usuarioEliminado)
+        //    return status(404, { message: `Correo ${correo} no encontrado` }) //Para probar el mensaje Correo no encontrado, pero ya esta en userController.deleteUser
+        return status(200, { message: `Correo ${correo} eliminado por admin`, user: usuarioEliminado });
+    },{
+        beforeHandle: authRole("admin")
     })

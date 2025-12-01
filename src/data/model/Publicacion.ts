@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGene
 import { Itinerario } from "./Itinerario";
 import { Usuario } from "./Usuario";
 import { Resena } from "./Resena";
+import { Foto } from "./Foto";
 
 @Entity()
 export class Publicacion {
@@ -23,4 +24,7 @@ export class Publicacion {
 
     @OneToMany(() => Resena, reseña => reseña.publicacion, { cascade: true })
     reseñas : Relation<Resena[]>
+
+    @OneToMany(() => Foto, foto => foto.publicacion, { cascade: true })
+    fotos : Relation<Foto[]>
 }

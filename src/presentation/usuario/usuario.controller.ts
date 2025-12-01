@@ -13,14 +13,24 @@ export class UserController {
         private fileDataSource = FileDataSource.getInstance()
     ) {}
 
+    public getAllUsers = async () => {
+        const usuarios = await this.userRepository.find({
+            relations: ['amistades']
+        });
+
+        /*Para que no se muestren las claves de los usuarios en /user/all*/
+        return usuarios.map(usuario => {
+            const { password, ...usuarioC } = usuario;
+            return usuarioC
+        });
+    }
+
     public getUserInfo = async ( correo: string ) : Promise<Usuario> => {
         const user = await this.userRepository.findOne({ where: { correo } })
         if( !user )
             throw new CustomError("Usuario no encontrado", 404);
 
         user.foto_url = user.foto_url
-                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
-                : ""
         return user;
     }
     public deleteUser = async ( correo: string ) : Promise<Usuario> => {
@@ -53,8 +63,6 @@ export class UserController {
         return {
             ...user,
             foto_url: user.foto_url
-                ? `${Bun.env.HOST}/fotos/${user.foto_url}`
-                : ""
         };
     }
     public updatePassword = async ( correo: string, newPassword: string ) : Promise<void> => {
