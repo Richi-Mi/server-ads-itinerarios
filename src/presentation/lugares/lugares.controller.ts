@@ -75,6 +75,7 @@ export class LugarController {
         lugar.foto_url = body.foto_url || lugar.foto_url;
         lugar.google_score = body.google_score ?? lugar.google_score;
         lugar.total_reviews = body.total_reviews ?? lugar.total_reviews;
+        lugar.descripcion = body.descripcion ?? lugar.descripcion;
         
         //Guardar cambios
         await this.lugarRepository.save(lugar);

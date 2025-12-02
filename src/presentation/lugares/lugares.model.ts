@@ -26,7 +26,8 @@ export namespace LugarModel {
             longitud: t.Optional(t.Number()),
             foto_url: t.Optional(t.String()),
             google_score: t.Optional(t.Number()),
-            total_reviews: t.Optional(t.Number())
+            total_reviews: t.Optional(t.Number()),
+            descripcion: t.Optional(t.String())
         }
     );
 
@@ -42,7 +43,8 @@ export namespace LugarModel {
             foto_url: t.Optional(t.String()),
             // foto_url: t.Optional(t.File( { format: ["image/jpeg", "image/png", "image/jpg"] } )),
             google_score: t.Optional(t.Number()),
-            total_reviews: t.Optional(t.Number())
+            total_reviews: t.Optional(t.Number()),
+            descripcion: t.Optional(t.String())
         }
     )
 
