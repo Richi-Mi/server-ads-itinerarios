@@ -3,6 +3,10 @@ import { ShareItineraryUseCase } from "../../domain/use-cases/ShareItineraryUseC
 // --- 1. IMPORTAR EL NUEVO CASO DE USO ---
 import { GetUserPublicationsUseCase } from "../../domain/use-cases/GetUserPublicationsUseCase";
 import { CustomError } from "../../domain/CustomError";
+import { PublicacionModel } from "./publicacion.model";
+import { FileDataSource } from "../../data/FileDataSource";
+import { PostgresDataSource } from "../../data/PostgresDataSource";
+import { Foto } from "../../data/model/Foto";
 
 export class PublicacionController {
     
@@ -10,7 +14,9 @@ export class PublicacionController {
         private readonly getAverageRatingUseCase: GetPublicationAverageRatingUseCase = new GetPublicationAverageRatingUseCase(),
         private readonly shareItineraryUseCase: ShareItineraryUseCase = new ShareItineraryUseCase(),
         // --- 2. INYECTARLO ---
-        private readonly getUserPublicationsUseCase: GetUserPublicationsUseCase = new GetUserPublicationsUseCase()
+        private readonly getUserPublicationsUseCase: GetUserPublicationsUseCase = new GetUserPublicationsUseCase(),
+        private readonly fileDataSource = FileDataSource.getInstance("development"), // Quit this
+        private readonly fotoRepository = PostgresDataSource.getRepository(Foto)
     ) {}
 
     public getAverageRating = async (publicationId: number) => {
@@ -23,20 +29,33 @@ export class PublicacionController {
     public shareItinerary = async (
         itinerarioId: number, 
         userCorreo: string, 
-        body: { descripcion: string, privacity_mode: boolean }
+        body: PublicacionModel.ShareBody
     ) => {
-        const { descripcion, privacity_mode } = body;
+        const { descripcion, privacity_mode, fotos } = body;
         
         if (isNaN(itinerarioId) || itinerarioId <= 0) {
             throw new CustomError("ID de itinerario no válido", 400);
         }
+       
+        const [publication, fileUrls] = await Promise.all([
+            this.shareItineraryUseCase.execute({
+                itinerarioId,
+                userCorreo,
+                descripcion,
+                privacity_mode: privacity_mode === "true" ? true : false
+            }),
+            this.fileDataSource.saveFiles(fotos || [])
+        ])
+        
+        for (let i = 0; i < fileUrls.length; i++) {
+            const foto = new Foto();
+            foto.foto_url = fileUrls[i];
+            foto.publicacion = publication;
+            await this.fotoRepository.save(foto);
+        }
 
-        return await this.shareItineraryUseCase.execute({
-            itinerarioId,
-            userCorreo,
-            descripcion,
-            privacity_mode
-        });
+        return { ...publication, fotos: fileUrls };
+         
     }
 
     // --- 3. NUEVO MÉTODO DEL CONTROLADOR ---
