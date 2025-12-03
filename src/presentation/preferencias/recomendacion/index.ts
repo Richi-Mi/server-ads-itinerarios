@@ -6,7 +6,7 @@ import { authService } from "../../services/auth.service"
 /**
  * * Ruta para recomendacion new user
  * @author Fenix
- * @link GET  /             - Ver la recomendacion 
+ * @link GET  /             - Ver la recomendacion del user
  */
 
 export const recomendacionRoutes = new Elysia({ prefix: "/recomendacion", name: "Recomendacion"})
