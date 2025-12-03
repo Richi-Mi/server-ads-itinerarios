@@ -61,4 +61,12 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
    .delete("/:username", async ({ store: { user }, params, amigoController }) => {
       const resp = await amigoController.removeFriend(user.username, params.username);
       return { message: "Amigo eliminado", data: resp };
+    })
+
+   .get("/sugerencias", async ({ store: { user }, amigoController }) => {
+        const sugerencias = await amigoController.getFriendsOfFriends(user.correo);
+        return { 
+            message: "Sugerencias de amigos encontradas", 
+            data: sugerencias 
+        };
     });
