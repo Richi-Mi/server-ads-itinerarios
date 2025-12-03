@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import { Actividad, Amigo, History, Itinerario, Lugar, Mensaje, Publicacion, Reporte, Resena, Usuario, Preferencias } from "./model";
+import { Foto } from "./model/Foto";
 
 
 export const PostgresDataSource = new DataSource({
@@ -15,7 +16,7 @@ export const PostgresDataSource = new DataSource({
     synchronize: true,
 
     logging: false,
-    entities: [Usuario, Amigo, Actividad, Itinerario, Lugar, Mensaje, Publicacion, Resena, Reporte, History, Preferencias],
+    entities: [Usuario, Amigo, Actividad, Itinerario, Lugar, Mensaje, Publicacion, Resena, Reporte, History, Preferencias, Foto],
 
     subscribers: [],
     migrations: []

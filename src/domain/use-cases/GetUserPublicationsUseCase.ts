@@ -14,7 +14,8 @@ export class GetUserPublicationsUseCase {
             },
            
             relations: {
-                itinerario: true 
+                itinerario: true,
+                fotos: true
             },
             
             order: {

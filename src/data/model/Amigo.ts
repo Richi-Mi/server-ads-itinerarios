@@ -2,9 +2,9 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, type Rel
 import { Usuario } from "./Usuario";
 
 export enum FriendRequestState {
-    FRIEND, //0
-    PENDING, //1
-    REJECTED, 
+    PENDING, //0
+    FRIEND, //1
+    REJECTED, //2
     LOCKED
 }
 

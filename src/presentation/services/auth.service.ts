@@ -5,17 +5,17 @@ import { CustomError } from "../../domain/CustomError";
 
 type Payload = {
     correo: string, 
+    username: string,
     role:   string
 }
 
-export const authService =  new Elysia({ name: 'service/auth' })
+export const authService = new Elysia({ name: 'service/auth' })
     .use(tokenPlugin)
     .state(
         {
             user: {} as Payload
         }
     )
-
     .guard(
         {
             headers: t.Object({
@@ -27,13 +27,14 @@ export const authService =  new Elysia({ name: 'service/auth' })
     )
     .onBeforeHandle({ as: 'scoped' }, async ({ store: { user }, tokenPlugin, headers: { token } }) => {    
         // Necesario extraer el token new user
-        const extraer = token?.replace("Bearer", "");       
+        const extraer = token?.replace("Bearer ", "");       
         const areToken = await tokenPlugin.verify(extraer) as Payload;     
         //const areToken = await tokenPlugin.verify(token) as Payload;        
         if (!areToken)
             throw new CustomError("Token inválido o expirado", 401);
 
         user.correo = areToken.correo;
+        user.username = areToken.username; 
         user.role   = areToken.role;
     });
 
