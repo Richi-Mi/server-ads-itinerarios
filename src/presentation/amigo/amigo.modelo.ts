@@ -7,18 +7,7 @@ export namespace AmigoModel {
     export const respondSolicitud = t.Object({
         Id: t.Number(), 
         state: t.Union([ t.Literal(0), t.Literal(1), t.Literal(2), t.Literal(3)])
-        //action: t.Enum(["ACCEPT", "REJECT"]),
     }); 
 
-    export const usuarioSugerido = t.Object({
-        username: t.String(),
-        nombre_completo: t.String(),
-        correo: t.String(),
-        foto_url: t.Union([t.String(), t.Null()])
-    });
-
-    export const amigosDeAmigosResponse = t.Object({
-        message: t.String(),
-        data: t.Array(usuarioSugerido)
-    });
+    export const searchFriend = t.Object({ q: t.String() }); 
 }
