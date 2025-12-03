@@ -18,6 +18,7 @@ import { AuthModel } from "../auth/auth.model";
  * @link DELETE /user                 - Elimina el usuario.
  * @author Peredo Borgonio Daniel
  * @link GET    /user/search          - Busca usuarios por nombre o correo.
+ * @link GET    /user/profile/:username  - Busca usuarios y regresa toda su informacion (menos su contraseña) junto con sus publicaciones
  * 
  * @admin
  * @link GET    /all                    - Ver todos los usuarios y sus itinerarios (no se si se quede asi).
@@ -83,6 +84,37 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
         return status(200, users);
     }, {
         query: UserModel.searchQuery
+    })
+
+        
+    .get("/profile", async ({ status, query, userController }) => {
+        const terminoBusqueda = query.q;
+
+        if (!terminoBusqueda) {
+            return status(400, { message: "Falta el parámetro 'q' en la URL (?q=...)" });
+        }
+
+        try {
+            
+            console.log("Buscando perfil con término:", terminoBusqueda); 
+            const user = await userController.getProfileBySearch(terminoBusqueda);
+            
+            return status(200, user);
+
+        } catch (error: any) {
+          
+            console.error("Error capturado en /profile:", error);
+            const statusCode = error.status || 500;
+            
+            const mensajeError = error.message || "Ocurrió un error desconocido";
+
+            return status(statusCode, { 
+                error: true,
+                message: mensajeError 
+            });
+        }
+    }, {
+        
     })
 
     /************ Rutas para admins (rol admin) ****************/
