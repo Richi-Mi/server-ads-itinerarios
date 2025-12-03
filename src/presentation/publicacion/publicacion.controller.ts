@@ -1,6 +1,5 @@
 import { GetPublicationAverageRatingUseCase } from "../../domain/use-cases/GetPublicationAverageRatingUseCase";
 import { ShareItineraryUseCase } from "../../domain/use-cases/ShareItineraryUseCase";
-// --- 1. IMPORTAR EL NUEVO CASO DE USO ---
 import { GetUserPublicationsUseCase } from "../../domain/use-cases/GetUserPublicationsUseCase";
 import { CustomError } from "../../domain/CustomError";
 import { PublicacionModel } from "./publicacion.model";
@@ -13,9 +12,8 @@ export class PublicacionController {
     constructor(
         private readonly getAverageRatingUseCase: GetPublicationAverageRatingUseCase = new GetPublicationAverageRatingUseCase(),
         private readonly shareItineraryUseCase: ShareItineraryUseCase = new ShareItineraryUseCase(),
-        // --- 2. INYECTARLO ---
         private readonly getUserPublicationsUseCase: GetUserPublicationsUseCase = new GetUserPublicationsUseCase(),
-        private readonly fileDataSource = FileDataSource.getInstance("development"), // Quit this
+        private readonly fileDataSource = FileDataSource.getInstance("development"), 
         private readonly fotoRepository = PostgresDataSource.getRepository(Foto)
     ) {}
 
@@ -57,8 +55,6 @@ export class PublicacionController {
         return { ...publication, fotos: fileUrls };
          
     }
-
-    // --- 3. NUEVO MÉTODO DEL CONTROLADOR ---
     public getMyPublications = async (userCorreo: string) => {
         return await this.getUserPublicationsUseCase.execute(userCorreo);
     }
