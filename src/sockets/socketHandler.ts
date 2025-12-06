@@ -4,11 +4,6 @@ import { randomBytes } from "crypto";
 import { PostgresDataSource as pgdb } from "../data/PostgresDataSource";
 import { Amigo, FriendRequestState, Mensaje, Usuario, estadoMensaje } from "../data/model";
 import { In } from "typeorm";
-// interface datosSocket extends Socket{
-//   sessionID?: string;
-//   userID?: string;
-//   username?: string;
-// }
 
 /*guardaMensaje*/
 async function guardaMensaje(text: string, emisor: string, receptor: string)
@@ -228,14 +223,12 @@ export function funcionesSockets(io: SocketIOServer) {
           const isFriendOnline = sessionStore.findAllSessions().some((s: any) => s.userID === amigo.userID && s.connected);
 
           //Contar mensajes no leidos desde la BD
-          //1.- El emisor es mi amigo
-          //2.- El receptor soy yo
-          //3.- El estado es menor a 2
+          //El emisor es mi amigo, el receptor soy yo y, el estado es menor a 2
           const sinLeer = await mensajeRepo.count({
             where: {
-              emisor: { correo: amigo.userID },
-              receptor: { correo: userID },
-              edoMensaje: In([0, 1]),
+              emisor: { correo: amigo.userID }, //El emisor es mi amigo
+              receptor: { correo: userID }, //El receptor soy yo
+              edoMensaje: In([0, 1]), //El estado es menor a 2, porque 0 enviado, 1 recibido
             }
           });
 
