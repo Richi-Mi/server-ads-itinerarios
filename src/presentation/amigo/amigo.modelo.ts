@@ -22,4 +22,8 @@ export namespace AmigoModel {
         message: t.String(),
         data: t.Array(usuarioSugerido)
     });
+
+    export const bloquear = t.Object({ user: t.String() })
+    export const desbloquear = t.Object({ user: t.String() })
+
 }
