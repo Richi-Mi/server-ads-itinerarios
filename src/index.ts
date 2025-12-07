@@ -37,7 +37,9 @@ const app = new Elysia()
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
-  .onError(({ code, error, status }) => {     
+  .onError(({ code, error, status }) => {  
+    console.log(error);
+       
     if (code === 'custom') {
       const customError = error as CustomError;
       return status( customError.statusCode, customError.toResponse());

@@ -3,6 +3,7 @@ import { Itinerario } from "./Itinerario";
 import { Usuario } from "./Usuario";
 import { Resena } from "./Resena";
 import { Foto } from "./Foto";
+import { Reporte } from "./Reporte";
 
 @Entity()
 export class Publicacion {
@@ -27,4 +28,7 @@ export class Publicacion {
 
     @OneToMany(() => Foto, foto => foto.publicacion, { cascade: true })
     fotos : Relation<Foto[]>
+
+    @OneToMany(() => Reporte, reporte => reporte.publicacion)
+    reportes : Relation<Reporte[]>
 }
