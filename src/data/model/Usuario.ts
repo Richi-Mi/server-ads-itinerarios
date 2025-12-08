@@ -52,6 +52,9 @@ export class Usuario {
     })
     privacity_mode : boolean    // true cuando el usuario no quiere que otros vean su informacion
     
+    @Column("timestamp", { default: () => "CURRENT_TIMESTAMP" })
+    createdAt: Date
+
     @OneToMany(() => Amigo, amigo => amigo.receiving_user,{ cascade: true } )
     amistadesRecibidas : Relation<Amigo[]>
     @OneToMany(() => Amigo, amigo => amigo.requesting_user, { cascade: true } )
