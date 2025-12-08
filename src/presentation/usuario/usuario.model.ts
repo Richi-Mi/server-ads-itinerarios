@@ -29,4 +29,10 @@ export namespace UserModel {
     })
 
     export type SearchQuery = typeof searchQuery.static
+
+    export const profileParams = t.Object({
+        username: t.String()
+    })
+
+    export type ProfileParams = typeof profileParams.static
 }

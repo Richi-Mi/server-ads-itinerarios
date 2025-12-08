@@ -13,6 +13,7 @@ import { actividadRoutes } from "./presentation/actividad"
 import { authRoutes } from "./presentation/auth";
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
+import { resenaRoutes } from "./presentation/resena";
 /*================================================================*/
 
 /*============================ Otros =============================*/
@@ -26,6 +27,7 @@ import { createServer } from "http";
 import { funcionesSockets } from "./sockets/socketHandler";
 import { recomendacionRoutes } from "./presentation/preferencias/recomendacion";
 import { amigoRoutes } from "./presentation/amigo";
+import { reportsRoutes } from "./presentation/reporte";
 /*================================================================*/
 
 const app = new Elysia()
@@ -35,7 +37,9 @@ const app = new Elysia()
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
-  .onError(({ code, error, status }) => {     
+  .onError(({ code, error, status }) => {  
+    console.log(error);
+       
     if (code === 'custom') {
       const customError = error as CustomError;
       return status( customError.statusCode, customError.toResponse());
@@ -61,6 +65,8 @@ const app = new Elysia()
   .use(itinerarioRoutes)
   .use(actividadRoutes)
   .use(publicacionRoutes)
+  .use(resenaRoutes)
+  .use(reportsRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
       const { mimeType, buffer } = await fileDataSource.getFileFromSource(params.file); 

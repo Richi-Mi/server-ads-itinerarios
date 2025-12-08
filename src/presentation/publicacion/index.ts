@@ -5,6 +5,7 @@ import { PublicacionModel } from "./publicacion.model";
 
 export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Publicacion" })
     .decorate('publicacionController', new PublicacionController())
+    .use(authService)
     
     .get("/:id/promedio", async ({ params, publicacionController, status }) => {
         const id = Number(params.id); 
@@ -15,7 +16,17 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
             id: t.Numeric({ error: "El ID debe ser un número" })
         })
     })
-    .use(authService)
+
+    .get("/:id", async ({ params, store, publicacionController, status }) => {
+        const id = Number(params.id);
+        const userCorreo = store.user?.correo;
+        const publicacion = await publicacionController.getPublicationWithResenas(id, userCorreo);
+        return status(200, publicacion);
+    }, {
+        params: t.Object({
+            id: t.Numeric({ error: "El ID debe ser un número" })
+        })
+    })
 
     .get("/", async ({ status, store, publicacionController }) => {
         const userCorreo = store.user.correo;
@@ -40,5 +51,16 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
         body: PublicacionModel.shareBody, 
         params: t.Object({
             id: t.Numeric({ error: "El ID del itinerario debe ser un número" })
+        })
+    })
+
+    .delete("/:id", async ({ params, store, publicacionController, status }) => {
+        const publicationId = Number(params.id);
+        const userCorreo = store.user.correo;
+        const result = await publicacionController.deletePublication(publicationId, userCorreo);
+        return status(200, result);
+    }, {
+        params: t.Object({
+            id: t.Numeric({ error: "El ID debe ser un número" })
         })
     });
