@@ -5,8 +5,7 @@ import { PostgresDataSource as pgdb } from "../data/PostgresDataSource";
 import { Amigo, FriendRequestState, Mensaje, Usuario } from "../data/model";
 
 /*guardaMensaje*/
-async function guardaMensaje(text: string, emisor: string, receptor: string)
-{
+async function guardaMensaje(text: string, emisor: string, receptor: string) {
   const repo = pgdb.getRepository(Mensaje);
 
   const nuevoMensaje = new Mensaje();
@@ -20,8 +19,7 @@ async function guardaMensaje(text: string, emisor: string, receptor: string)
 }
 
 /*misMensajes*/
-async function misMensajes(miCorreo: string)
-{
+async function misMensajes(miCorreo: string) {
   const repo = pgdb.getRepository(Mensaje);
 
   const mensajes = await repo.find({
@@ -34,29 +32,31 @@ async function misMensajes(miCorreo: string)
   });
 
   //Se ponen los mensajes en el formato que usa el front
-  return mensajes.map(m => ({
+  return mensajes.map((m) => ({
     content: m.text,
     from: m.emisor.correo,
-    to: m.receptor.correo
-  }));  
+    to: m.receptor.correo,
+  }));
 }
 
-async function getFriends(miCorreo: string)
-{
+async function getFriends(miCorreo: string) {
   const amigosRepo = pgdb.getRepository(Amigo);
 
   const relaciones = await amigosRepo.find({
-    where: [//Muestra todos los amigos que tengo, ya sea que envie o recibi la solicitud, y la aceptaron
-      { //Yo envie la solicitud de amistad y somos amigos (mandar solicitud)
+    where: [
+      //Muestra todos los amigos que tengo, ya sea que envie o recibi la solicitud, y la aceptaron
+      {
+        //Yo envie la solicitud de amistad y somos amigos (mandar solicitud)
         requesting_user: { correo: miCorreo },
         status: FriendRequestState.FRIEND,
       },
-      { //Yo recibi la solicitud de amistad y somos amigos (enviar solicitud)
+      {
+        //Yo recibi la solicitud de amistad y somos amigos (enviar solicitud)
         receiving_user: { correo: miCorreo },
         status: FriendRequestState.FRIEND,
-      }
+      },
     ],
-    relations: ["requesting_user", "receiving_user"]
+    relations: ["requesting_user", "receiving_user"],
   });
 
   const misAmigos = relaciones.map((relacion) => {
@@ -68,8 +68,11 @@ async function getFriends(miCorreo: string)
     // else
     //   amigo = envia
 
-    const amigo = relacion.requesting_user.correo === miCorreo ? relacion.receiving_user : relacion.requesting_user;
-    return{
+    const amigo =
+      relacion.requesting_user.correo === miCorreo
+        ? relacion.receiving_user
+        : relacion.requesting_user;
+    return {
       userID: amigo.correo,
       username: amigo.username,
     };
@@ -81,14 +84,22 @@ async function getFriends(miCorreo: string)
 //Clases de Store
 class InMemorySessionStore {
   sessions = new Map();
-  findSession(id: string) { return this.sessions.get(id); }
-  saveSession(id: string, session: any) { this.sessions.set(id, session); }
-  findAllSessions() { return [...this.sessions.values()]; }
+  findSession(id: string) {
+    return this.sessions.get(id);
+  }
+  saveSession(id: string, session: any) {
+    this.sessions.set(id, session);
+  }
+  findAllSessions() {
+    return [...this.sessions.values()];
+  }
 }
 
 class InMemoryMessageStore {
   messages: any[] = [];
-  saveMessage(message: any) { this.messages.push(message); }
+  saveMessage(message: any) {
+    this.messages.push(message);
+  }
   findMessagesForUser(userID: string) {
     return this.messages.filter(
       ({ from, to }) => from === userID || to === userID
@@ -105,8 +116,38 @@ const sessionStore = new InMemorySessionStore();
  */
 
 //export function funcionesSockets(io: SocketIOServer, app: Elysia<any, any> | void) {
+let io: SocketIOServer;
+
+// 1. Esta función se llama UNA vez en tu index.ts al arrancar
+export const initSocketIO = (serverInstance: SocketIOServer) => {
+  io = serverInstance;
+};
+
+// 2. Esta es la función que usarás en tus CONTROLADORES
+export const notificarUsuario = (userId: string, data: any) => {
+  if (!io) return;
+
+  // Convertimos los datos al formato que tu Frontend espera
+  // Asegúrate que estos campos coincidan con lo que usa tu NotificationCard
+  const payload = {
+    id: Date.now(), // ID temporal
+    tipo: data.tipo, // "FRIEND_REQUEST", "COMMENT", etc.
+    leido: false,
+    fecha: new Date(),
+    actor_nombre: data.actorName,
+    actor_avatar: data.actorAvatar || "/img/angel.jpg",
+    actor_username: data.actorUsername,
+    preview: {
+      mensaje: data.mensaje,
+      linkId: data.linkId,
+    },
+    linkId: data.linkId,
+  };
+
+  io.to(userId).emit("receive notification", payload);
+};
+
 export function funcionesSockets(io: SocketIOServer) {
-  
   // Middleware de Autenticación "Proxy"
   io.use(async (socket: Socket, next) => {
     //Reconexion con sessionID, es decir, si hay sessionID utilizala para la reconexcion, si no hay sessionID asigna una nueva
@@ -135,13 +176,13 @@ export function funcionesSockets(io: SocketIOServer) {
     //Se puede quitar y leer los datos que vienen en el token, pero debe agregarse una nueva
     //biblioteca (jsonwebtoken)
     try {
-      //const res = await fetch("http://localhost:4000/user", {
-      const res = await fetch("https://harol-lovers.up.railway.app/user", {
-        method: "GET", 
+      const res = await fetch("http://localhost:4000/user", {
+        //const res = await fetch("https://harol-lovers.up.railway.app/user", {
+        method: "GET",
         headers: {
-          'Content-Type': 'application.json',
-          'token': token 
-        }
+          "Content-Type": "application.json",
+          token: token,
+        },
       });
 
       if (!res.ok) {
@@ -154,7 +195,7 @@ export function funcionesSockets(io: SocketIOServer) {
       if (!userData || !userData.correo || !userData.username) {
         return next(new Error("Datos de usuario incompletos del backend"));
       }
-      
+
       //Asigna nueva sessionID porque no hay
       //console.log('Hola desde nueva sesion');
       //Asignar datos al socket
@@ -163,7 +204,6 @@ export function funcionesSockets(io: SocketIOServer) {
       (socket as any).userID = userData.correo;
       (socket as any).username = userData.username;
       next();
-
     } catch (err: any) {
       //console.error("Error al asignar datos al socket:", err.message);
       return next(new Error("Error al asignar datos al socket"));
@@ -173,27 +213,33 @@ export function funcionesSockets(io: SocketIOServer) {
   //Conexion de Socketio
   io.on("connection", async (socket: Socket) => {
     //Se obtienen los datos del socket
-    const { userID, username, sessionID } = (socket as any);
+    const { userID, username, sessionID } = socket as any;
 
     //console.log(`Socket AUTENTICADO conectado: ${username} (ID: ${userID})`);
 
     //Guardar sesion
-    sessionStore.saveSession(sessionID, { sessionID: sessionID, userID: userID, username: username, connected: true });
+    sessionStore.saveSession(sessionID, {
+      sessionID: sessionID,
+      userID: userID,
+      username: username,
+      connected: true,
+    });
 
     //Emitir sesion
     socket.emit("session", { sessionID, userID, username });
 
     //Unirse a la sala privada
     socket.join(userID);
-    
+
     const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
 
     const allOnlineSessions = sessionStore.findAllSessions();
-   
+
     listaAmigos.forEach((amigo) => {
-      const friendSession = allOnlineSessions.find((s: any) => s.userID === amigo.userID);
-      if(friendSession && friendSession.connected)
-      {
+      const friendSession = allOnlineSessions.find(
+        (s: any) => s.userID === amigo.userID
+      );
+      if (friendSession && friendSession.connected) {
         socket.to(amigo.userID).emit("user connected", {
           userID: userID,
           username: username,
@@ -204,49 +250,58 @@ export function funcionesSockets(io: SocketIOServer) {
     });
 
     socket.on("get friends list", async () => {
-        //console.log(`Buscando amigos y mensajes de ${userID} en la BD. get friends list recibido`);
+      //console.log(`Buscando amigos y mensajes de ${userID} en la BD. get friends list recibido`);
 
-        const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
+      const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
 
-        const allMyMessages = await misMensajes(userID); //Obtener todos los mensajes del usuario de la BD
+      const allMyMessages = await misMensajes(userID); //Obtener todos los mensajes del usuario de la BD
 
-        const allSessions = sessionStore.findAllSessions();
-        const usersMap = new Map<string, any>();
-        
-        for(const amigo of listaAmigos) {
-          const friendID = amigo.userID;
-          const friendName = amigo.username;
+      const allSessions = sessionStore.findAllSessions();
+      const usersMap = new Map<string, any>();
 
-            const friendSession = allSessions.find((s: any) => s.userID === friendID);
-            //La sesion friendSession debe existir y tener la propiedad connected en true
-            const isConnected = (friendSession?.connected === true);
+      for (const amigo of listaAmigos) {
+        const friendID = amigo.userID;
+        const friendName = amigo.username;
 
-            //De todos los mensajes que envio el usuario, filta los de este amigo especifico
-            const chatHistory = allMyMessages.filter(
-              (m) => (m.from === userID && m.to === friendID) ||
-                      (m.from === friendID && m.to === userID)
-            );
+        const friendSession = allSessions.find(
+          (s: any) => s.userID === friendID
+        );
+        //La sesion friendSession debe existir y tener la propiedad connected en true
+        const isConnected = friendSession?.connected === true;
 
-            usersMap.set(friendID, {
-                userID: friendID,
-                username: friendName, //Username del amigo en la BD
-                connected: isConnected,
-                // messages: friendMessages,
-                messages: chatHistory,
-            });
-        }
+        //De todos los mensajes que envio el usuario, filta los de este amigo especifico
+        const chatHistory = allMyMessages.filter(
+          (m) =>
+            (m.from === userID && m.to === friendID) ||
+            (m.from === friendID && m.to === userID)
+        );
 
-        const users = Array.from(usersMap.values());
-        //console.log(`[Friends] Enviando ${users.length} amigos al cliente.`);
+        usersMap.set(friendID, {
+          userID: friendID,
+          username: friendName, //Username del amigo en la BD
+          connected: isConnected,
+          // messages: friendMessages,
+          messages: chatHistory,
+        });
+      }
 
-        socket.emit("users", users); //Enviar la lista de amigos como respuesta
+      const users = Array.from(usersMap.values());
+      //console.log(`[Friends] Enviando ${users.length} amigos al cliente.`);
+
+      socket.emit("users", users); //Enviar la lista de amigos como respuesta
     });
 
-//Logs de deupracion
-  // console.log("debug de amigos");
-  // console.log(`Buscando amigos para el userID: ${userID}`);
-  // console.log("Claves disponibles en friendListsDB:", Object.keys(friendListsDB));
-//Logs de depuracion
+    //Escuchar notificaciones
+    socket.on("send notification", (data) => {
+      console.log(data);
+      socket.emit("receive notification", data);
+    });
+
+    //Logs de deupracion
+    // console.log("debug de amigos");
+    // console.log(`Buscando amigos para el userID: ${userID}`);
+    // console.log("Claves disponibles en friendListsDB:", Object.keys(friendListsDB));
+    //Logs de depuracion
 
     //Escuchar mensajes privados
     socket.on("private message", async ({ content, to }) => {
@@ -264,7 +319,7 @@ export function funcionesSockets(io: SocketIOServer) {
     //Desconexion
     socket.on("disconnect", async () => {
       //userID y sessionID
-      const { userID, username, sessionID } = (socket as any);
+      const { userID, username, sessionID } = socket as any;
 
       //await new Promise(resolve => setTimeout(resolve, 1000)); Para quitar el parpadeo de desconectado/conectado (se recarga la pagina)
 
