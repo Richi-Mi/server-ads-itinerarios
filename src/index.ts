@@ -14,6 +14,7 @@ import { authRoutes } from "./presentation/auth";
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
 import { resenaRoutes } from "./presentation/resena";
+import { dashboardRoutes } from "./presentation/dashboard";
 /*================================================================*/
 
 /*============================ Otros =============================*/
@@ -33,8 +34,9 @@ import { reportsRoutes } from "./presentation/reporte";
 /*================================================================*/
 
 const app = new Elysia()
-  .decorate("pgdb", PostgresDataSource)
-  .onStop(async ({ decorator }) => {
+
+  .decorate('pgdb', PostgresDataSource)
+  .onStop(async ({ decorator }) => { 
     await decorator.pgdb.destroy();
   })
 
@@ -69,6 +71,7 @@ const app = new Elysia()
   .use(notificacionRoutes)
   .use(resenaRoutes)
   .use(reportsRoutes)
+  .use(dashboardRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
       const { mimeType, buffer } = await fileDataSource.getFileFromSource(
@@ -92,8 +95,8 @@ const app = new Elysia()
     return status(404, { message: "Ruta no encontrada" });
   });
 
-//Se inicia la base de datos manualmente
-try {
+
+try{
   await PostgresDataSource.initialize();
   console.log("Base de datos conectada");
 } catch (error) {
@@ -103,9 +106,8 @@ try {
 
 //Servidor HTTP
 const server = createServer(async (req, res) => {
-  try {
-    // Convierte {IncomingMessage} a {Request}
-    //Convierte la peticion HTTP de Node.js a una Request de Elysia
+
+  try{
     const url = `http://${req.headers.host}${req.url}`;
     const request = new Request(url, {
       method: req.method,
@@ -117,11 +119,7 @@ const server = createServer(async (req, res) => {
 
     const response = await app.handle(request); //wait for elysia handle request
 
-    //Envia la respuesta {Response} de Elysia de vuelta al cliente
-    res.writeHead(
-      response.status,
-      Object.fromEntries(response.headers.entries())
-    );
+    res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
     const body = Buffer.from(await response.arrayBuffer());
     res.end(body);
   } catch (err) {
@@ -131,14 +129,8 @@ const server = createServer(async (req, res) => {
   }
 });
 
-//Servidor de Socket.io unido al servidor HTTP
 const io = new Server(server, {
-  //Cors para Socket.io
-  //cors: {
-  //  origin: '*',
-  //  methods: ["GET", "POST"],
-  //},
-  cors: {},
+  cors:{}
 });
 
 funcionesSockets(io);
