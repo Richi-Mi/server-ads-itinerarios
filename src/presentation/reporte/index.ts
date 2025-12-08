@@ -43,8 +43,30 @@ export const reportsRoutes = new Elysia({ prefix: "/reports" })
         params: ReporteModel.Params,
         body: ReporteModel.Update
     })
+
+    .get("/admin/detail/:id", async ({ params, store, reporteController, status }) => {
+    if (store.user.role !== "admin") throw new CustomError("Requiere admin", 403);
+    
+    const idNum = Number(params.id);
+    const result = await reporteController.getAdminDetail(idNum);
+    
+    if (!result) return status(404, { message: "Reporte no encontrado" });
+    
+    return Response.json(result); 
+}, {
+    params: ReporteModel.Params
+})
+    .post("/admin/ban/:id", async ({ params, store, reporteController, status }) => {
+        if (store.user.role !== "admin") throw new CustomError("Requiere admin", 403);
+
+        const idNum = Number(params.id);
+        const result = await reporteController.banPublication(idNum);
+        
+        return status(200, result);
+    }, {
+        params: ReporteModel.Params
+    })
     .delete("/:id", async ({ params, store, reporteController, status }) => {
-        // Solo admins pueden eliminar
         if (store.user.role !== "admin") {
             throw new CustomError("Acceso denegado: se requiere rol admin", 403);
         }
