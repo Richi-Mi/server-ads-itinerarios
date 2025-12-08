@@ -141,7 +141,7 @@ export function funcionesSockets(io: SocketIOServer) {
     //Se hace una consulta a la base para verificar si el token existe, es valido o ya expiro
     //Se puede quitar y leer los datos que vienen en el token, pero debe agregarse una nueva
     //biblioteca (jsonwebtoken)
-    const URL = Bun.env.HOST ?? "http://localhost:4000";
+    const URL = Bun.env.HOST+'/user' || "http://localhost:4000/user";
     try {
       const res = await fetch(URL, {
         method: "GET", 
