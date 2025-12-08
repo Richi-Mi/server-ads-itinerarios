@@ -2,7 +2,8 @@ import { type Server as SocketIOServer, type Socket } from "socket.io";
 import { randomBytes } from "crypto";
 
 import { PostgresDataSource as pgdb } from "../data/PostgresDataSource";
-import { Amigo, FriendRequestState, Mensaje, Usuario } from "../data/model";
+import { Amigo, FriendRequestState, Mensaje, Usuario, estadoMensaje } from "../data/model";
+import { In } from "typeorm";
 
 /*guardaMensaje*/
 async function guardaMensaje(text: string, emisor: string, receptor: string)
@@ -15,29 +16,34 @@ async function guardaMensaje(text: string, emisor: string, receptor: string)
   nuevoMensaje.emisor = { correo: emisor } as Usuario;
   nuevoMensaje.receptor = { correo: receptor } as Usuario;
 
-  await repo.save(nuevoMensaje);
+  nuevoMensaje.horaMensaje = new Date();
+  nuevoMensaje.edoMensaje = estadoMensaje.ENVIADO;
+
+  return await repo.save(nuevoMensaje);
   //console.log(`Mensaje de ${emisor} para ${receptor} guardado en la BD`);
 }
 
 /*misMensajes*/
-async function misMensajes(miCorreo: string)
+async function misMensajes(miCorreo: string, amigo: string)
 {
   const repo = pgdb.getRepository(Mensaje);
 
   const mensajes = await repo.find({
     where: [
-      { emisor: { correo: miCorreo } }, //Mensajes que envie
-      { receptor: { correo: miCorreo } }, //Menajes que recibi
+      { emisor: { correo: miCorreo }, receptor: { correo: amigo } }, //Mensajes que envie
+      { receptor: { correo: miCorreo }, emisor: { correo: amigo } }, //Menajes que recibi
     ],
     relations: ["emisor", "receptor"], //Quienes son emisor y receptor
-    order: { id: "ASC" }, //Orden cronologico de los mensajes
+    order: { horaMensaje: "ASC" }, //Orden cronologico de los mensajes
   });
 
   //Se ponen los mensajes en el formato que usa el front
   return mensajes.map(m => ({
     content: m.text,
     from: m.emisor.correo,
-    to: m.receptor.correo
+    to: m.receptor.correo,
+    createdAt: m.horaMensaje,
+    status: m.edoMensaje
   }));  
 }
 
@@ -72,6 +78,7 @@ async function getFriends(miCorreo: string)
     return{
       userID: amigo.correo,
       username: amigo.username,
+      foto_url: amigo.foto_url
     };
   });
 
@@ -134,9 +141,9 @@ export function funcionesSockets(io: SocketIOServer) {
     //Se hace una consulta a la base para verificar si el token existe, es valido o ya expiro
     //Se puede quitar y leer los datos que vienen en el token, pero debe agregarse una nueva
     //biblioteca (jsonwebtoken)
+    const URL = Bun.env.HOST+'/user' || "http://localhost:4000/user";
     try {
-      //const res = await fetch("http://localhost:4000/user", {
-      const res = await fetch("https://harol-lovers.up.railway.app/user", {
+      const res = await fetch(URL, {
         method: "GET", 
         headers: {
           'Content-Type': 'application.json',
@@ -174,8 +181,11 @@ export function funcionesSockets(io: SocketIOServer) {
   io.on("connection", async (socket: Socket) => {
     //Se obtienen los datos del socket
     const { userID, username, sessionID } = (socket as any);
-
+    // console.log("Usuario conectado: ", userID);
     //console.log(`Socket AUTENTICADO conectado: ${username} (ID: ${userID})`);
+    
+    //Unirse a la sala privada
+    socket.join(userID);
 
     //Guardar sesion
     sessionStore.saveSession(sessionID, { sessionID: sessionID, userID: userID, username: username, connected: true });
@@ -183,9 +193,43 @@ export function funcionesSockets(io: SocketIOServer) {
     //Emitir sesion
     socket.emit("session", { sessionID, userID, username });
 
-    //Unirse a la sala privada
-    socket.join(userID);
-    
+    socket.on("get friends list", async () => {
+        //console.log(`Buscando amigos y mensajes de ${userID} en la BD. get friends list recibido`);
+
+        const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
+
+        // const allSessions = sessionStore.findAllSessions();
+        const usersMap = [];
+
+        const mensajeRepo = pgdb.getRepository(Mensaje);
+
+        for(const amigo of listaAmigos) {
+          const isFriendOnline = sessionStore.findAllSessions().some((s: any) => s.userID === amigo.userID && s.connected);
+
+          //Contar mensajes no leidos desde la BD
+          //El emisor es mi amigo, el receptor soy yo y, el estado es menor a 2
+          const sinLeer = await mensajeRepo.count({
+            where: {
+              emisor: { correo: amigo.userID }, //El emisor es mi amigo
+              receptor: { correo: userID }, //El receptor soy yo
+              edoMensaje: In([0, 1]), //El estado es menor a 2, porque 0 enviado, 1 recibido
+            }
+          });
+
+          usersMap.push({
+            userID: amigo.userID,
+            username: amigo.username,
+            foto_url: amigo.foto_url,
+            connected: isFriendOnline,
+            messages: [],
+            unreadCount: sinLeer
+          })
+        }
+        //console.log(`[Friends] Enviando ${users.length} amigos al cliente.`);
+
+        socket.emit("users", usersMap); //Enviar la lista de amigos como respuesta
+    });
+
     const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
 
     const allOnlineSessions = sessionStore.findAllSessions();
@@ -203,43 +247,9 @@ export function funcionesSockets(io: SocketIOServer) {
       }
     });
 
-    socket.on("get friends list", async () => {
-        //console.log(`Buscando amigos y mensajes de ${userID} en la BD. get friends list recibido`);
-
-        const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
-
-        const allMyMessages = await misMensajes(userID); //Obtener todos los mensajes del usuario de la BD
-
-        const allSessions = sessionStore.findAllSessions();
-        const usersMap = new Map<string, any>();
-        
-        for(const amigo of listaAmigos) {
-          const friendID = amigo.userID;
-          const friendName = amigo.username;
-
-            const friendSession = allSessions.find((s: any) => s.userID === friendID);
-            //La sesion friendSession debe existir y tener la propiedad connected en true
-            const isConnected = (friendSession?.connected === true);
-
-            //De todos los mensajes que envio el usuario, filta los de este amigo especifico
-            const chatHistory = allMyMessages.filter(
-              (m) => (m.from === userID && m.to === friendID) ||
-                      (m.from === friendID && m.to === userID)
-            );
-
-            usersMap.set(friendID, {
-                userID: friendID,
-                username: friendName, //Username del amigo en la BD
-                connected: isConnected,
-                // messages: friendMessages,
-                messages: chatHistory,
-            });
-        }
-
-        const users = Array.from(usersMap.values());
-        //console.log(`[Friends] Enviando ${users.length} amigos al cliente.`);
-
-        socket.emit("users", users); //Enviar la lista de amigos como respuesta
+    socket.on("fetch messages", async ({ withUserID }) => {
+      const messages = await misMensajes(userID, withUserID);
+      socket.emit("chat history", { withUserID, messages });
     });
 
 //Logs de deupracion
@@ -250,21 +260,65 @@ export function funcionesSockets(io: SocketIOServer) {
 
     //Escuchar mensajes privados
     socket.on("private message", async ({ content, to }) => {
+      //messageStore.saveMessage(message);
+      const mensajeGuardado = await guardaMensaje(content, userID, to); //Guarda el mensaje en la Base de Datos
+
       const message = {
-        content,
+        content: content,
         from: userID,
         to,
+        createdAt: mensajeGuardado.horaMensaje, //Fecha del mensaje en la BD
+        status: 0 //Enviado, cuando llega al servidor esta enviado
       };
-      socket.to(to).to(userID).emit("private message", message); //Enviar al destinatario
+      socket.to(to).to(userID).emit("private message", message); //Enviar al destinatario y a mi sala
+    });
 
-      //messageStore.saveMessage(message);
-      await guardaMensaje(content, userID, to); //Guarda el mensaje en la Base de Datos
+    //Alguien esta escribiendo
+    socket.on('typing', ({ to }) => {
+      socket.to(to).emit('display typing', { userID });
+    })
+
+    //Alguien dejo de escribir
+    socket.on('stop typing', ({ to }) => {
+      socket.to(to).emit('hide typing', { userID })
+    });
+
+    socket.on('mark messages received', async ({ withUserID }) => {
+      const repo = pgdb.getRepository(Mensaje);
+
+      await repo.createQueryBuilder()
+        .update(Mensaje)
+        .set({ edoMensaje: 1 })
+        .where("emisorCorreo = :emisor AND receptorCorreo = :receptor AND edoMensaje < '1'", {
+          emisor: withUserID, //Amigo que envia los mensajes
+          receptor: userID    //Yo
+        })
+        .execute()
+
+        socket.to(withUserID).emit("message received", { byUserID: userID });
+    })
+
+    socket.on('mark messages read', async ({ withUserID }) => {
+
+      const repo = pgdb.getRepository(Mensaje);
+
+      await repo.createQueryBuilder()
+        .update(Mensaje)
+        .set({ edoMensaje: 2 })
+        .where("emisorCorreo = :emisor AND receptorCorreo = :receptor AND edoMensaje < '2'", {
+          emisor: withUserID, //Amigo que envia mensaje
+          receptor: userID    //Yo
+        })
+        .execute();
+
+      socket.to(withUserID).emit("messages read", { byUserID: userID });
     });
 
     //Desconexion
     socket.on("disconnect", async () => {
       //userID y sessionID
       const { userID, username, sessionID } = (socket as any);
+      // console.log("Usuario desconectado: ", userID);
 
       //await new Promise(resolve => setTimeout(resolve, 1000)); Para quitar el parpadeo de desconectado/conectado (se recarga la pagina)
 
@@ -274,12 +328,12 @@ export function funcionesSockets(io: SocketIOServer) {
       if (isDisconnected) {
         //console.log(`Disconnected - Usuario $username (${userID}) totalmente desconectado`);
         const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
-        listaAmigos.forEach((friendID) => {
+        listaAmigos.forEach((amigo) => {
           //No usar 'socket.to()' porque el socket esta muerto, no hay socket. Si se envian mensajes y el destinatario se desconecto, no vera los mensajes
           //socket.to(friendID).emit("user disconnected", userID);
 
           //Usar 'io.to()' (el servidor principal). Si se envian mensajes y el destinatario se desconecto, al conectarse de nuevo vera esos mensajes
-          io.to(friendID.userID).emit("user disconnected", userID);
+          io.to(amigo.userID).emit("user disconnected", userID);
           //console.log('Usuario desconectado', userID);
         });
         sessionStore.saveSession(sessionID, {
