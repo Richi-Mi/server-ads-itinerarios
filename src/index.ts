@@ -34,7 +34,6 @@ import { reportsRoutes } from "./presentation/reporte";
 const app = new Elysia()
   .decorate('pgdb', PostgresDataSource)
   .onStop(async ({ decorator }) => { 
-    
     await decorator.pgdb.destroy();
   })
   .error({ 'custom': CustomError })
@@ -89,7 +88,6 @@ const app = new Elysia()
     return status(404, { message: "Ruta no encontrada" });
   })
 
-//Se inicia la base de datos manualmente
 try{
   await PostgresDataSource.initialize();
   console.log('Base de datos conectada');
@@ -101,8 +99,6 @@ try{
 //Servidor HTTP
 const server = createServer(async (req, res) => {
   try{
-    // Convierte {IncomingMessage} a {Request}
-    //Convierte la peticion HTTP de Node.js a una Request de Elysia
     const url = `http://${req.headers.host}${req.url}`;
     const request = new Request(url, {
       method: req.method,
@@ -112,7 +108,6 @@ const server = createServer(async (req, res) => {
 
     const response = await app.handle(request); //wait for elysia handle request
 
-    //Envia la respuesta {Response} de Elysia de vuelta al cliente
     res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
     const body = Buffer.from(await response.arrayBuffer());
     res.end(body);
@@ -123,13 +118,7 @@ const server = createServer(async (req, res) => {
   }
 });
 
-//Servidor de Socket.io unido al servidor HTTP
 const io = new Server(server, {
-  //Cors para Socket.io
-  //cors: {
-  //  origin: '*',
-  //  methods: ["GET", "POST"],
-  //},
   cors:{}
 });
 
