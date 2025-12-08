@@ -11,28 +11,31 @@ export class ReporteController {
     ) {}
 
     async create(payload: { description: string, entity_id: number }, userCorreo: string) {
-        const reporte = new Reporte();
-
-        reporte.description = payload.description;
-        const publicacion = await this.publicacionRepository.findOneBy({ id: payload.entity_id });
-        
-        if( !publicacion ) 
-            throw new CustomError("Publicacion no encontrada", 404);
-
-        reporte.publicacion = publicacion;
-        reporte.usuario_emitente = { correo: userCorreo } as any;
-
-        const historial = new History();
-        historial.action_description = `Reporte creado por ${userCorreo} para la publicacion con id ${publicacion.id} dice qué : ${payload.description}`;
-        historial.reporte = reporte;
-
-        const [creationResult] = await Promise.all([
-            this.reporteRepository.save(reporte),
-            this.historialRepository.save(historial)
-        ])
-        
-        return creationResult;
+    const publicacion = await this.publicacionRepository.findOneBy({ id: payload.entity_id });
+    if( !publicacion ) 
+        throw new CustomError("Publicacion no encontrada", 404);
+    const reporteExistente = await this.reporteRepository.findOne({
+        where: {
+            usuario_emitente: { correo: userCorreo },
+            publicacion: { id: payload.entity_id }
+        }
+    });
+    if (reporteExistente) {
+        throw new CustomError("Ya has reportado esta publicación anteriormente", 409); 
     }
+    const reporte = new Reporte();
+    reporte.description = payload.description;
+    reporte.publicacion = publicacion;
+    reporte.usuario_emitente = { correo: userCorreo } as any;
+    const historial = new History();
+    historial.action_description = `Reporte creado por ${userCorreo} para la publicacion con id ${publicacion.id} dice qué : ${payload.description}`;
+    historial.reporte = reporte;
+    const [creationResult] = await Promise.all([
+        this.reporteRepository.save(reporte),
+        this.historialRepository.save(historial)
+    ])
+    return creationResult;
+}
 
     async getAll() {
         return await this.reporteRepository.find({ relations: ["usuario_emitente", "historial"] });
@@ -53,4 +56,40 @@ export class ReporteController {
     async delete(id: number) {
         return await this.reporteRepository.delete(id);
     }
+    
+    async getAdminDetail(id: number) {
+    const reporte = await this.reporteRepository.findOne({ 
+        where: { id }, 
+        relations: [
+            "usuario_emitente",       
+            "publicacion",            
+            "publicacion.itinerario", 
+            "historial"               
+        ] 
+    });
+    if (!reporte) return null;
+    return reporte;
+}
+
+    /**
+     * Aceptar Reporte (Banear): Elimina la publicación reportada.
+     * Esto cumple: "Eliminar la publicación".
+     */
+    async banPublication(reporteId: number) {
+        const reporte = await this.reporteRepository.findOne({ 
+            where: { id: reporteId },
+            relations: ["publicacion"]
+        });
+        if (!reporte) throw new CustomError("El reporte no existe", 404);
+        // Si la publicación ya fue borrada antes, avisamos
+        if (!reporte.publicacion) {
+            await this.reporteRepository.delete(reporteId);
+            return { message: "La publicación ya no existía. Se limpió el reporte." };
+        }
+        // Eliminamos la publicación 
+        await this.publicacionRepository.delete(reporte.publicacion.id);
+        await this.reporteRepository.delete(reporteId);
+        return { message: "Publicación eliminada correctamente y reporte cerrado." };
+    }
+
 }

@@ -14,6 +14,7 @@ import { authRoutes } from "./presentation/auth";
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
 import { resenaRoutes } from "./presentation/resena";
+import { dashboardRoutes } from "./presentation/dashboard";
 /*================================================================*/
 
 /*============================ Otros =============================*/
@@ -67,6 +68,7 @@ const app = new Elysia()
   .use(publicacionRoutes)
   .use(resenaRoutes)
   .use(reportsRoutes)
+  .use(dashboardRoutes)
   .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
       const { mimeType, buffer } = await fileDataSource.getFileFromSource(params.file); 
