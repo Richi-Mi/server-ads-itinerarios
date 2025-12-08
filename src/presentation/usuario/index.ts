@@ -116,7 +116,29 @@ export const userRoutes = new Elysia({ prefix: "/user", name: "Usuario" })
     }, {
         
     })
-
+    .get("/profile/:username", async ({ status, params, userController }) => {
+        const { username } = params as { username: string };
+        
+        try {
+            const user = await userController.getProfileByUsername(username);
+            
+            if (!user) {
+                return status(404, { message: "Usuario no encontrado" });
+            }
+            return status(200, user);
+            
+        }
+        catch (error: any) {
+            console.error("Error capturado en /profile/:username:", error);
+            const statusCode = error.status || 500;
+            const mensajeError = error.message || "Ocurrió un error desconocido";
+            
+            return status(statusCode, {
+                error: true,
+                message: mensajeError
+            });
+        }
+    })
     /************ Rutas para admins (rol admin) ****************/
     /* Registrar un usuario */
     .post("/admin/register",  async ({ status, body}) => {        

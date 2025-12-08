@@ -10,13 +10,30 @@ import { Amigo, Usuario, Notificacion } from "../../data/model";
 import { NotificationType } from "../../data/model";
 import { notificarUsuario } from "../../sockets/socketHandler";
 
-// Elimina los decoradores que dependen de repositorios aquí para evitar el crash al inicio
-export const publicacionRoutes = new Elysia({
-  prefix: "/publicacion",
-  name: "Publicacion",
-})
-  .decorate("publicacionController", new PublicacionController())
-  .use(authService)
+export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Publicacion" })
+    .decorate('publicacionController', new PublicacionController())
+    .use(authService)
+    
+    .get("/:id/promedio", async ({ params, publicacionController, status }) => {
+        const id = Number(params.id); 
+        const promedio = await publicacionController.getAverageRating(id);
+        return status(200, promedio);
+    }, {
+        params: t.Object({
+            id: t.Numeric({ error: "El ID debe ser un número" })
+        })
+    })
+
+    .get("/:id", async ({ params, store, publicacionController, status }) => {
+        const id = Number(params.id);
+        const userCorreo = store.user?.correo;
+        const publicacion = await publicacionController.getPublicationWithResenas(id, userCorreo);
+        return status(200, publicacion);
+    }, {
+        params: t.Object({
+            id: t.Numeric({ error: "El ID debe ser un número" })
+        })
+    })
 
   .get(
     "/:id/promedio",
@@ -102,7 +119,7 @@ export const publicacionRoutes = new Elysia({
                  newNotificacion.receptor = destinatario;
                  newNotificacion.resourceId = nuevaPublicacion.id;
                  newNotificacion.previewText = "ha hecho una nueva publicación";
-                 newNotificacion.date = new Date(); // Si tu modelo lo pide
+                 newNotificacion.createdAt = new Date(); // Si tu modelo lo pide
 
                  await notifRepo.save(newNotificacion);
 
@@ -132,3 +149,4 @@ export const publicacionRoutes = new Elysia({
       }),
     }
   );
+
