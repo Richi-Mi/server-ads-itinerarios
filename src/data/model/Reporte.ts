@@ -1,6 +1,7 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, type Relation } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, type Relation } from "typeorm";
 import { Usuario } from "./Usuario";
 import { History } from "./History";
+import { Publicacion } from "./Publicacion";
 
 @Entity()
 export class Reporte { 
@@ -10,8 +11,8 @@ export class Reporte {
     @Column()
     description : string
 
-    @Column()
-    entity_id : string
+    @ManyToOne(() => Publicacion, publicacion => publicacion.reportes, { onDelete: 'CASCADE', onUpdate: 'CASCADE' } )
+    publicacion : Relation<Publicacion>
 
     @ManyToOne( () => Usuario, usuario => usuario.reportes, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     usuario_emitente : Relation<Usuario>

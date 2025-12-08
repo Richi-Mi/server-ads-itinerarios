@@ -6,11 +6,12 @@ import { FileDataSource } from "../../data/FileDataSource";
 import { CustomError } from "../../domain/CustomError";
 import { FindManyOptions, ILike } from "typeorm";
 export class UserController {
-private getUserPublicationsUseCase = new GetUserPublicationsUseCase();
+
+  private getUserPublicationsUseCase = new GetUserPublicationsUseCase();
   constructor(
     private userRepository = PostgresDataSource.getRepository(Usuario),
     private fileDataSource = FileDataSource.getInstance()
-  ) {}
+  ) { }
 
   public getAllUsers = async () => {
     const usuarios = await this.userRepository.find({
@@ -120,28 +121,28 @@ private getUserPublicationsUseCase = new GetUserPublicationsUseCase();
     }
     let publicaciones: any[] = [];
     try {
-        publicaciones = await this.getUserPublicationsUseCase.execute(user.correo);
+      publicaciones = await this.getUserPublicationsUseCase.execute(user.correo);
     } catch (error) {
-        console.error("Error cargando publicaciones:", error);
-        publicaciones = [];
+      console.error("Error cargando publicaciones:", error);
+      publicaciones = [];
     }
     const responseLimpio = {
-        correo: user.correo,
-        username: user.username,
-        nombre_completo: user.nombre_completo,
-        foto_url: user.foto_url,
-        privacity_mode: user.privacity_mode,
-        role: user.role,
-        publicaciones: publicaciones.map(pub => ({
-            id: pub.id,
-            descripcion: pub.descripcion,
-            privacity_mode: pub.privacity_mode,
-            fotos: pub.fotos, 
-            itinerario: pub.itinerario ? {
-                id: pub.itinerario.id,
-                nombre: pub.itinerario.nombre || "Itinerario", 
-            } : null
-        }))
+      correo: user.correo,
+      username: user.username,
+      nombre_completo: user.nombre_completo,
+      foto_url: user.foto_url,
+      privacity_mode: user.privacity_mode,
+      role: user.role,
+      publicaciones: publicaciones.map(pub => ({
+        id: pub.id,
+        descripcion: pub.descripcion,
+        privacity_mode: pub.privacity_mode,
+        fotos: pub.fotos,
+        itinerario: pub.itinerario ? {
+          id: pub.itinerario.id,
+          nombre: pub.itinerario.nombre || "Itinerario",
+        } : null
+      }))
     };
     return responseLimpio;
   };
@@ -170,4 +171,39 @@ private getUserPublicationsUseCase = new GetUserPublicationsUseCase();
 
     return friendsAmount;
   };
+
+  public getProfileByUsername = async (username: string) => {
+    const user = await this.userRepository.findOne({
+      where: { username },
+    });
+    if (!user) {
+      throw new CustomError("Usuario no encontrado", 404);
+    }
+    let publicaciones: any[] = [];
+    try {
+      publicaciones = await this.getUserPublicationsUseCase.execute(user.correo);
+    } catch (error) {
+      console.error("Error cargando publicaciones:", error);
+      publicaciones = [];
+    }
+    const responseLimpio = {
+      correo: user.correo,
+      username: user.username,
+      nombre_completo: user.nombre_completo,
+      foto_url: user.foto_url,
+      privacity_mode: user.privacity_mode,
+      role: user.role,
+      publicaciones: publicaciones.map(pub => ({
+        id: pub.id,
+        descripcion: pub.descripcion,
+        privacity_mode: pub.privacity_mode,
+        fotos: pub.fotos,
+        itinerario: pub.itinerario ? {
+          id: pub.itinerario.id,
+          nombre: pub.itinerario.nombre || "Itinerario",
+        } : null
+      }))
+    };
+    return responseLimpio;
+  }
 }

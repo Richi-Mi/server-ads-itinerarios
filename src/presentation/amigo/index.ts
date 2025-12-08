@@ -9,11 +9,14 @@ import { Amigo, Usuario } from "../../data/model";
  * * Rutas CRUD FRIENDSHIP
  * @author Fenix
  * @link POST /solicitud    ->   body  "receiving": "friend email or username add " - Enviar una solicitud 
+ * @link POST /cancelar     ->   - Cancerlar una solicitud pendiente
  * @link PUT  /respond      ->  body  "Id": num "state": num_action    - Responder solicitud
  * @link GET  /pendiente    - Ver lista de solicitudes aun no respondidas 
  * @link GET  /             - Ver lista de friends 
  * @link GET  /search        - buscar amigo x username
- * @link DELATE /:username   - Eliminar amigo por username
+ * @link DELETE /:username   - Eliminar amigo por username
+ * @link POST  /block        -> body "user: user email or username add"            - Bloquear user 
+ * @link POST  /unblock      -> body "user: user email or username add"            - desloquear user 
  */
 export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
  .use(authService)
@@ -23,6 +26,13 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
     const res = await amigoController.sendRequest(user.correo, body.receiving ); 
 
     return { message: "Solicitud enviada", data: res  };
+
+ }, { body: AmigoModel.envioSolicitud})
+
+  .post("/cancelar", async ({ store: { user }, body, amigoController }) => {
+    const res = await amigoController.cancelRequest(user.correo, body.receiving ); 
+
+    return { message: "Solicitud cancelada", data: res  };
 
  }, { body: AmigoModel.envioSolicitud})
 
@@ -62,6 +72,16 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
       const resp = await amigoController.removeFriend(user.username, params.username);
       return { message: "Amigo eliminado", data: resp };
     })
+
+   .post("/block", async ({ body, store: {user}, amigoController}) => { 
+    const r = await amigoController.block(user.correo, body.user )
+    return { message: "Amigo bloqueado" }; 
+   }, { body: AmigoModel.bloquear })
+
+   .post("/unblock", async ({ body, store: {user}, amigoController}) => { 
+    const r = await amigoController.unblock(user.correo, body.user)  
+    return { message: "Amigo desbloqueado" }; 
+   }, { body: AmigoModel.desbloquear  })
 
    .get("/sugerencias", async ({ store: { user }, amigoController }) => {
         const sugerencias = await amigoController.getFriendsOfFriends(user.correo);

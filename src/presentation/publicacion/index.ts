@@ -10,7 +10,7 @@ import { Amigo, Usuario, Notificacion } from "../../data/model";
 import { NotificationType } from "../../data/model";
 import { notificarUsuario } from "../../sockets/socketHandler";
 
-// Elimina los decoradores que dependen de repositorios aquí para evitar el crash al inicio
+
 export const publicacionRoutes = new Elysia({
   prefix: "/publicacion",
   name: "Publicacion",
@@ -46,8 +46,7 @@ export const publicacionRoutes = new Elysia({
       store,
       publicacionController,
       status,
-      // NOTA: Ya no recibimos amigoController ni notificacionController por params
-      // Los creamos aquí adentro
+
     }) => {
       const itinerarioId = Number(params.id);
       const userCorreo = store.user.correo;
@@ -58,24 +57,12 @@ export const publicacionRoutes = new Elysia({
         userCorreo,
         body
       );
-
-      // ==========================================================
-      // 2. INYECCIÓN SEGURA DE DEPENDENCIAS (LAZY LOAD)
-      // ==========================================================
-      // Como estamos dentro de una función async que se ejecuta cuando el usuario llama,
-      // la BD ya está conectada 100% seguro.
-      
       const userRepo = PostgresDataSource.getRepository(Usuario);
       const amigoRepo = PostgresDataSource.getRepository(Amigo);
       const notifRepo = PostgresDataSource.getRepository(Notificacion);
 
       const usuarioController = new UserController(userRepo);
       const amigoController = new AmigoController(amigoRepo, userRepo);
-      // const notificacionController = new NotificacionController(notifRepo, userRepo); // Si lo necesitas luego
-
-      // ==========================================================
-      // 3. LÓGICA DE NEGOCIO
-      // ==========================================================
 
       try {
         const usuario = await usuarioController.getUserInfo(userCorreo);
@@ -83,9 +70,6 @@ export const publicacionRoutes = new Elysia({
 
         if (misAmigos && usuario) {
             for (const amigo of misAmigos) {
-                 // Lógica para identificar destinatario
-                 // Asegúrate que tu listFriend devuelve lo que esperas
-                 // A veces devuelve { friend: ... } o la entidad directa. Revisa eso.
                  const destinatario = 
                     (amigo.requesting_user && amigo.requesting_user.correo === userCorreo)
                     ? amigo.receiving_user 

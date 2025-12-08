@@ -13,6 +13,7 @@ import { actividadRoutes } from "./presentation/actividad";
 import { authRoutes } from "./presentation/auth";
 import { publicacionRoutes } from "./presentation/publicacion";
 import { preferenciasRoutes } from "./presentation/preferencias";
+import { resenaRoutes } from "./presentation/resena";
 /*================================================================*/
 
 /*============================ Otros =============================*/
@@ -27,6 +28,8 @@ import { funcionesSockets, initSocketIO } from "./sockets/socketHandler";
 import { recomendacionRoutes } from "./presentation/preferencias/recomendacion";
 import { amigoRoutes } from "./presentation/amigo";
 import { notificacionRoutes } from "./presentation/notificacion";
+import { reportsRoutes } from "./presentation/reporte";
+
 /*================================================================*/
 
 const app = new Elysia()
@@ -34,9 +37,11 @@ const app = new Elysia()
   .onStop(async ({ decorator }) => {
     await decorator.pgdb.destroy();
   })
-  .error({ custom: CustomError })
-  .onError(({ code, error, status }) => {
-    if (code === "custom") {
+  .error({ 'custom': CustomError })
+  .onError(({ code, error, status }) => {  
+    console.log(error);
+       
+    if (code === 'custom') {
       const customError = error as CustomError;
       return status(customError.statusCode, customError.toResponse());
     }
@@ -61,9 +66,9 @@ const app = new Elysia()
   .use(actividadRoutes)
   .use(publicacionRoutes)
   .use(notificacionRoutes)
-  .get(
-    "/fotos/:file",
-    async ({ params, set }) => {
+  .use(resenaRoutes)
+  .use(reportsRoutes)
+  .get('/fotos/:file', async ({ params, set }) => {
       const fileDataSource = FileDataSource.getInstance();
       const { mimeType, buffer } = await fileDataSource.getFileFromSource(
         params.file
@@ -135,18 +140,14 @@ const io = new Server(server, {
   cors: {},
 });
 
-//Funciones que utilizan Socket.io
 funcionesSockets(io);
 initSocketIO(io);
 console.log("Socket.IO iniciado y guardado globalmente");
 //funcionesSockets(io, app);
 
-//Puerto donde estara el servidor HTTP con Elysia y Socketio
 const PORT = Number(Bun.env.PORT ?? 4000);
 
-//Se inicia el servidor HTTP que comparten ELysia y Socketio
 server.listen(PORT, () => {
-  console.log(`🦊 Elysia and Socket.io is running at http://localhost:${PORT}`);
-  //console.log(`🦊 Elysia and Socket.io is running at https://harol-lovers.up.railway.app:${PORT}`);
+  console.log(Bun.env.ENVIRONMENT === "development" ? `🦊 Elysia and Socket.io is running at http://localhost:${PORT}` : `🦊 Elysia and Socket.io is running at https://harol-lovers.up.railway.app`);
 });
-//console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+
