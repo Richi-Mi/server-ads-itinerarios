@@ -141,8 +141,9 @@ export function funcionesSockets(io: SocketIOServer) {
     //Se hace una consulta a la base para verificar si el token existe, es valido o ya expiro
     //Se puede quitar y leer los datos que vienen en el token, pero debe agregarse una nueva
     //biblioteca (jsonwebtoken)
+    const URL = Bun.env.HOST ?? "http://localhost:4000";
     try {
-      const res = await fetch("http://localhost:4000/user", {
+      const res = await fetch(URL, {
         method: "GET", 
         headers: {
           'Content-Type': 'application.json',
@@ -180,7 +181,7 @@ export function funcionesSockets(io: SocketIOServer) {
   io.on("connection", async (socket: Socket) => {
     //Se obtienen los datos del socket
     const { userID, username, sessionID } = (socket as any);
-
+    // console.log("Usuario conectado: ", userID);
     //console.log(`Socket AUTENTICADO conectado: ${username} (ID: ${userID})`);
     
     //Unirse a la sala privada
@@ -191,23 +192,6 @@ export function funcionesSockets(io: SocketIOServer) {
 
     //Emitir sesion
     socket.emit("session", { sessionID, userID, username });
-    
-    const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
-
-    const allOnlineSessions = sessionStore.findAllSessions();
-   
-    listaAmigos.forEach((amigo) => {
-      const friendSession = allOnlineSessions.find((s: any) => s.userID === amigo.userID);
-      if(friendSession && friendSession.connected)
-      {
-        socket.to(amigo.userID).emit("user connected", {
-          userID: userID,
-          username: username,
-          connected: true,
-          messages: [],
-        });
-      }
-    });
 
     socket.on("get friends list", async () => {
         //console.log(`Buscando amigos y mensajes de ${userID} en la BD. get friends list recibido`);
@@ -244,6 +228,23 @@ export function funcionesSockets(io: SocketIOServer) {
         //console.log(`[Friends] Enviando ${users.length} amigos al cliente.`);
 
         socket.emit("users", usersMap); //Enviar la lista de amigos como respuesta
+    });
+
+    const listaAmigos = await getFriends(userID); //Obtener amigos de la BD
+
+    const allOnlineSessions = sessionStore.findAllSessions();
+   
+    listaAmigos.forEach((amigo) => {
+      const friendSession = allOnlineSessions.find((s: any) => s.userID === amigo.userID);
+      if(friendSession && friendSession.connected)
+      {
+        socket.to(amigo.userID).emit("user connected", {
+          userID: userID,
+          username: username,
+          connected: true,
+          messages: [],
+        });
+      }
     });
 
     socket.on("fetch messages", async ({ withUserID }) => {
@@ -317,6 +318,7 @@ export function funcionesSockets(io: SocketIOServer) {
     socket.on("disconnect", async () => {
       //userID y sessionID
       const { userID, username, sessionID } = (socket as any);
+      // console.log("Usuario desconectado: ", userID);
 
       //await new Promise(resolve => setTimeout(resolve, 1000)); Para quitar el parpadeo de desconectado/conectado (se recarga la pagina)
 

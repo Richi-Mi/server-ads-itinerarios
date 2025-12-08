@@ -125,16 +125,10 @@ const io = new Server(server, {
   cors:{}
 });
 
-//Funciones que utilizan Socket.io
 funcionesSockets(io);
-//funcionesSockets(io, app);
 
-//Puerto donde estara el servidor HTTP con Elysia y Socketio
 const PORT = Number(Bun.env.PORT ?? 4000);
 
-//Se inicia el servidor HTTP que comparten ELysia y Socketio
 server.listen(PORT, () => {
-  console.log(`🦊 Elysia and Socket.io is running at http://localhost:${PORT}`);
-  // console.log(`🦊 Elysia and Socket.io is running at https://harol-lovers.up.railway.app${PORT}`);
+  console.log(Bun.env.ENVIRONMENT === "development" ? `🦊 Elysia and Socket.io is running at http://localhost:${PORT}` : `🦊 Elysia and Socket.io is running at https://harol-lovers.up.railway.app`);
 });
-//console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
