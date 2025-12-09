@@ -132,7 +132,7 @@ export class AmigoController {
             where: {
                 receiving_user: { correo }, status: FriendRequestState.PENDING
             }, 
-            relations: ["requesting_user"], 
+            relations: ["requesting_user", "receiving_user"], 
             select: {
                 requesting_user: {
                     username: true, 
