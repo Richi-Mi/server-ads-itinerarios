@@ -122,24 +122,25 @@ export class AmigoController {
     } else {
       req.status = FriendRequestState.REJECTED;
     }
+    const tipoAccion = action === "FRIEND" ? NotificationType.FRIEND_ACCEPTED : NotificationType.FRIEND_REJECTED;
     const newNotificacion = new Notificacion();
-    newNotificacion.type = NotificationType.FRIEND_ACCEPTED;
+    newNotificacion.type = tipoAccion;
     newNotificacion.isRead = false;
     newNotificacion.emisor = req.receiving_user;
     newNotificacion.receptor = req.requesting_user;
     newNotificacion.resourceId = req.id;
-    newNotificacion.previewText = "ha aceptado tu solicitud de amistad";
+    newNotificacion.previewText = (action === "FRIEND" ? "ha aceptado tu solicitud de amistad" : "ha rechazado tu solicitud de amistad");
 
     await PostgresDataSource.manager.save(newNotificacion);
     const noti = await this.userRepository.find();
     console.log(noti);
 
     notificarUsuario(req.requesting_user.correo, {
-       tipo: "FRIEND_ACCEPTED",
+       tipo: tipoAccion,
        actorName: req.receiving_user.nombre_completo,
        actorUsername: req.receiving_user.username, // o username real
        actorAvatar: req.receiving_user.foto_url,
-       mensaje: "ha aceptado tu solicitud de amistad",
+       mensaje: (action === "FRIEND" ? "ha aceptado tu solicitud de amistad" : "ha rechazado tu solicitud de amistad"),
        linkId: req.id,
      });
     return this.amigoRepository.save(req);
