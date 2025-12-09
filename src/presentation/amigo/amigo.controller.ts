@@ -13,7 +13,7 @@ export class AmigoController {
     private userRepository: Repository<Usuario>
   ) {}
 
-  private friend(correoA: string, correoB?: string) {
+  private friend(correoA: string, correoB?: string, tatus: FriendRequestState = FriendRequestState.FRIEND) {
     if (correoB) {
       return [
         {
@@ -192,6 +192,61 @@ export class AmigoController {
 
     return this.amigoRepository.remove(relation);
   }
+
+
+    async block(user: string, block: string ) {
+
+        const senderUser = await this.userRepository.findOne({
+             where: [{ correo: user }, { username: user }]
+        });
+
+        const receivingUser = await this.userRepository.findOne({
+             where: [{ correo: block }, { username: block }]
+        }); 
+
+        if (!senderUser || !receivingUser)
+           throw new CustomError("Este usuario no existe", 404); 
+
+        const req = await this.amigoRepository.findOne({
+            where: this.friend(senderUser.correo, receivingUser.correo)
+        }); 
+
+        if(req){
+            req.status = FriendRequestState.LOCKED;
+            return this.amigoRepository.save(req);
+        }
+
+        const blockUser = this.amigoRepository.create({
+            requesting_user: senderUser,
+            receiving_user: receivingUser,
+            status: FriendRequestState.LOCKED
+        });
+
+        return this.amigoRepository.save(blockUser);
+    }
+
+    async unblock(user: string, block:string){
+        const senderUser = await this.userRepository.findOne({
+             where: [{ correo: user }, { username: user }]
+        });
+
+        const receivingUser = await this.userRepository.findOne({
+             where: [{ correo: block }, { username: block }]
+        }); 
+
+        if (!senderUser || !receivingUser)
+           throw new CustomError("Este usuario no existe", 404); 
+
+        const req = await this.amigoRepository.findOne({
+            where: this.friend(senderUser.correo, receivingUser.correo, FriendRequestState.LOCKED)
+        }); 
+
+        if(!req)
+            throw new CustomError("Este usuario no esta bloqueado", 404);
+
+        req.status = FriendRequestState.FRIEND;
+        return this.amigoRepository.remove(req!); 
+    }
 
   async getFriendsOfFriends(correo: string): Promise<
     {
