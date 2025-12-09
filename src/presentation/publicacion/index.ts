@@ -63,24 +63,16 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
       store,
       publicacionController,
       status,
-      // NOTA: Ya no recibimos amigoController ni notificacionController por params
-      // Los creamos aquí adentro
     }) => {
       const itinerarioId = Number(params.id);
       const userCorreo = store.user.correo;
 
-      // 1. Crear Publicación
       const nuevaPublicacion = await publicacionController.shareItinerary(
         itinerarioId,
         userCorreo,
         body
       );
 
-      // ==========================================================
-      // 2. INYECCIÓN SEGURA DE DEPENDENCIAS (LAZY LOAD)
-      // ==========================================================
-      // Como estamos dentro de una función async que se ejecuta cuando el usuario llama,
-      // la BD ya está conectada 100% seguro.
       
       const userRepo = PostgresDataSource.getRepository(Usuario);
       const amigoRepo = PostgresDataSource.getRepository(Amigo);
@@ -88,11 +80,6 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
 
       const usuarioController = new UserController(userRepo);
       const amigoController = new AmigoController(amigoRepo, userRepo);
-      // const notificacionController = new NotificacionController(notifRepo, userRepo); // Si lo necesitas luego
-
-      // ==========================================================
-      // 3. LÓGICA DE NEGOCIO
-      // ==========================================================
 
       try {
         const usuario = await usuarioController.getUserInfo(userCorreo);
@@ -100,32 +87,25 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
 
         if (misAmigos && usuario) {
             for (const amigo of misAmigos) {
-                 // Lógica para identificar destinatario
-                 // Asegúrate que tu listFriend devuelve lo que esperas
-                 // A veces devuelve { friend: ... } o la entidad directa. Revisa eso.
                  const destinatario = 
                     (amigo.requesting_user && amigo.requesting_user.correo === userCorreo)
                     ? amigo.receiving_user 
                     : amigo.requesting_user;
                  
-                 // Validación extra por si acaso
                  if (!destinatario) continue;
 
-                 // A. GUARDAR EN BD (Usando Repositorio Directo es más rápido aquí)
                  const newNotificacion = new Notificacion();
-                 newNotificacion.type = NotificationType.POST; // Asegúrate de tener este Enum
+                 newNotificacion.type = NotificationType.POST; 
                  newNotificacion.isRead = false;
                  newNotificacion.emisor = usuario;
                  newNotificacion.receptor = destinatario;
                  newNotificacion.resourceId = nuevaPublicacion.id;
                  newNotificacion.previewText = "ha hecho una nueva publicación";
-                 newNotificacion.createdAt = new Date(); // Si tu modelo lo pide
 
                  await notifRepo.save(newNotificacion);
 
-                 // B. ENVIAR SOCKET
                  notificarUsuario(destinatario.correo, {
-                    tipo: "NUEVA_PUBLICACION", // O usa el Enum si el front lo soporta
+                    tipo: Notification.Type.POST, 
                     actorName: usuario.nombre_completo || usuario.username,
                     actorUsername: usuario.username,
                     actorAvatar: usuario.foto_url || "",
@@ -137,7 +117,6 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
         }
       } catch (error) {
         console.error("Error en notificaciones (no bloqueante):", error);
-        // No hacemos throw para que al menos retorne la publicación creada
       }
 
       return status(201, { ...nuevaPublicacion });
