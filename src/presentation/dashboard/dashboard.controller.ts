@@ -8,7 +8,9 @@ import { Reporte } from "../../data/model/Reporte";
 export class DashboardController {
 
     async getAdminStats() {
-        
+        const now = new Date();
+        const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const userRepo = PostgresDataSource.getRepository(Usuario);
         const lugarRepo = PostgresDataSource.getRepository(Lugar);
         const itinerarioRepo = PostgresDataSource.getRepository(Itinerario);
@@ -16,17 +18,33 @@ export class DashboardController {
         const totalViajeros = await userRepo.count({
             where: { role: UserRole.USER } 
         });
-        const crecimientoPorcentaje = 0; 
-        const nuevosEsteMes = 0;
+        const nuevosEsteMes = await userRepo.count({
+            where: {
+                role: UserRole.USER,
+                createdAt: MoreThanOrEqual(firstDayCurrentMonth) 
+            }
+        });
+        const nuevosMesPasado = await userRepo.count({
+            where: {
+                role: UserRole.USER,
+                createdAt: Between(firstDayLastMonth, firstDayCurrentMonth)
+            }
+        });
+        let crecimientoPorcentaje = 0;
+        
+        if (nuevosMesPasado > 0) {
+            crecimientoPorcentaje = ((nuevosEsteMes - nuevosMesPasado) / nuevosMesPasado) * 100;
+        } else if (nuevosEsteMes > 0) {
+            crecimientoPorcentaje = 100; 
+        }
         const totalLugares = await lugarRepo.count();
         const totalItinerarios = await itinerarioRepo.count();
-        const reportesPendientes = await reporteRepo.count();
-
+        const reportesPendientes = await reporteRepo.count(); 
         return {
             usuarios: {
                 total: totalViajeros,
-                nuevosEsteMes: nuevosEsteMes, // Se enviará 0
-                crecimiento: `${crecimientoPorcentaje}%` // Se enviará "0%"
+                nuevosEsteMes: nuevosEsteMes, 
+                crecimiento: `${crecimientoPorcentaje.toFixed(2)}%` 
             },
             metricasGenerales: {
                 totalLugares: totalLugares,
