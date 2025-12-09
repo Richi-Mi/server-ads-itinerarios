@@ -53,7 +53,7 @@ export class PublicacionController {
             foto.publicacion = publication;
             await this.fotoRepository.save(foto);
         }
-
+        
         return { ...publication, fotos: fileUrls };
          
     }

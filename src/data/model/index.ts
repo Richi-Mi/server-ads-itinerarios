@@ -9,3 +9,4 @@ export * from './Resena'
 export * from './Reporte'
 export * from './History'
 export * from './Preferencias';
+export * from './Notificacion';
