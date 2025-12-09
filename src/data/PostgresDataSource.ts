@@ -1,24 +1,48 @@
 import { DataSource } from "typeorm";
-import { Actividad, Amigo, History, Itinerario, Lugar, Mensaje, Publicacion, Reporte, Resena, Usuario, Preferencias } from "./model";
+import {
+  Actividad,
+  Amigo,
+  History,
+  Itinerario,
+  Lugar,
+  Mensaje,
+  Publicacion,
+  Reporte,
+  Resena,
+  Usuario,
+  Preferencias,
+  Notificacion
+} from "./model";
 import { Foto } from "./model/Foto";
 
-
 export const PostgresDataSource = new DataSource({
-    
-    type: "postgres",
+  type: "postgres",
 
-    host: Bun.env.DB_HOST,
-    port: Number(Bun.env.DB_PORT), 
-    username: Bun.env.DB_USER,
-    password: Bun.env.DB_PASSWORD,
-    database: Bun.env.DB_NAME,
-    
-    synchronize: true,
+  host: Bun.env.DB_HOST,
+  port: Number(Bun.env.DB_PORT),
+  username: Bun.env.DB_USER,
+  password: Bun.env.DB_PASSWORD,
+  database: Bun.env.DB_NAME,
 
-    logging: false,
-    entities: [Usuario, Amigo, Actividad, Itinerario, Lugar, Mensaje, Publicacion, Resena, Reporte, History, Preferencias, Foto],
+  synchronize: true,
 
-    subscribers: [],
-    migrations: []
+  logging: false,
+  entities: [
+    Usuario,
+    Amigo,
+    Actividad,
+    Itinerario,
+    Lugar,
+    Mensaje,
+    Publicacion,
+    Resena,
+    Reporte,
+    History,
+    Preferencias,
+    Foto,
+    Notificacion,
+  ],
 
-})
+  subscribers: [],
+  migrations: [],
+});
