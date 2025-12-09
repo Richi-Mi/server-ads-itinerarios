@@ -207,17 +207,11 @@ export function funcionesSockets(io: SocketIOServer) {
       if (!userData || !userData.correo || !userData.username) {
         return next(new Error("Datos de usuario incompletos del backend"));
       }
-
-      //Asigna nueva sessionID porque no hay
-      //console.log('Hola desde nueva sesion');
-      //Asignar datos al socket
-      (socket as any).sessionID = randomBytes(8).toString("hex"); //8 bytes aleatorios en forma de cadena hexadecimal (16 digitos hexadecimales)
-      //(socket as any).sessionID = userData.correo; //Anterior
+      (socket as any).sessionID = randomBytes(8).toString("hex"); 
       (socket as any).userID = userData.correo;
       (socket as any).username = userData.username;
       next();
     } catch (err: any) {
-      //console.error("Error al asignar datos al socket:", err.message);
       return next(new Error("Error al asignar datos al socket"));
     }
   });
