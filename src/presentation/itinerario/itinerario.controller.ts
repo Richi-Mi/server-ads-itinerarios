@@ -38,7 +38,7 @@ export class ItinerarioController {
         if (authUser.role === "admin" && itinerario)
             return itinerario;
 
-        itinerario = await this.itinerarioRepository.findOne({
+        let itinerario = await this.itinerarioRepository.findOne({
             where: { 
                 id: id,
                 owner: {
@@ -106,7 +106,7 @@ export class ItinerarioController {
             throw new CustomError("Itinerario no encontrado", 404);
 
         //Actualizar campos
-        itinerario.title = body.title || itinerario.title;
+        let itinerario.title = body.title || itinerario.title;
         
         //Guardar cambios
         await this.itinerarioRepository.save(itinerario);
