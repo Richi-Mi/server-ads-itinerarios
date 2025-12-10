@@ -27,26 +27,14 @@ export class ItinerarioController {
         });
     }
 
-    public getItinerarioById = async (idString: string, authUser: AuthUser): Promise<Itinerario> => {
-        const id = parseInt(idString);
-        
+    public getItinerarioById = async (idString: string, authUser: AuthUser): Promise<Itinerario> => {        
         const itinerario = await this.itinerarioRepository.findOne({
             where: { id: parseInt(idString) },
-            relations: ['actividades', 'actividades.lugar']
-        });
+            relations: ['actividades', 'actividades.lugar', 'owner']
+        });        
 
         if (authUser.role === "admin" && itinerario)
             return itinerario;
-
-        let itinerario = await this.itinerarioRepository.findOne({
-            where: { 
-                id: id,
-                owner: {
-                    correo: authUser.correo
-                }
-            },
-            relations: ['actividades', 'actividades.lugar']
-        });
 
         if (!itinerario) 
             throw new CustomError("Itinerario no encontrado", 404);
@@ -118,16 +106,6 @@ export class ItinerarioController {
 
         if(isNaN(id))
             throw new CustomError("ID invalido", 400);
-
-        const itinerario = await this.itinerarioRepository.findOne({
-            where: { id: parseInt(idString) },
-            relations: ["owner"]
-        });
-
-        if (authUser.role === "admin") {
-            await this.itinerarioRepository.remove(itinerario);
-            return itinerario;
-        }
 
         let itinerario = await this.itinerarioRepository.findOne({
             where: { 
