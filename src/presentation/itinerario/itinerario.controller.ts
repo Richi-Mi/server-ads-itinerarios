@@ -106,7 +106,7 @@ export class ItinerarioController {
             throw new CustomError("Itinerario no encontrado", 404);
 
         //Actualizar campos
-        let itinerario.title = body.title || itinerario.title;
+        itinerario.title = body.title || itinerario.title;
         
         //Guardar cambios
         await this.itinerarioRepository.save(itinerario);
@@ -129,7 +129,7 @@ export class ItinerarioController {
             return itinerario;
         }
 
-        itinerario = await this.itinerarioRepository.findOne({
+        let itinerario = await this.itinerarioRepository.findOne({
             where: { 
                 id: id,
                 owner: {
