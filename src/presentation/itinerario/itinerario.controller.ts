@@ -17,20 +17,20 @@ export class ItinerarioController {
     public getAllItinerarios = async (authUser: AuthUser): Promise<Itinerario[]> => {
         if (authUser.role === "admin") {
             return await this.itinerarioRepository.find({
-                relations: ["owner", "actividades"]
+                relations: ["actividades", "actividades.lugar"]
             });
         }
 
         return await this.itinerarioRepository.find({
             where: { owner: { correo: authUser.correo } },
-            relations: ["owner", "actividades"]
+            relations: ["actividades", "actividades.lugar"]
         });
     }
 
     public getItinerarioById = async (idString: string, authUser: AuthUser): Promise<Itinerario> => {
         const itinerario = await this.itinerarioRepository.findOne({
             where: { id: parseInt(idString) },
-            relations: ["owner"]
+            relations: ['actividades', 'actividades.lugar']
         });
 
         if (!itinerario) 
