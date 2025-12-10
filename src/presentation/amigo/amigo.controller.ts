@@ -86,16 +86,16 @@ export class AmigoController {
     newNotificacion.resourceId = save.id;
     newNotificacion.previewText = "te ha enviado una solicitud de amistad";
 
-    await PostgresDataSource.manager.save(newNotificacion);
-    const noti = await this.userRepository.find();
-    console.log(noti);
-
+    const notificacionGuardada = await PostgresDataSource.manager.save(newNotificacion);
+  
     notificarUsuario(receivingUser.correo, {
-      tipo: "FRIEND_REQUEST",
-      actorName: senderUser.username,
-      actorUsername: senderUser.correo, // o username real
-      mensaje: "te ha enviado una solicitud de amistad",
-      linkId: senderUser.correo,
+      id: notificacionGuardada.id,
+      tipo: notificacionGuardada.type,
+      actorName: notificacionGuardada.emisor.nombre_completo,
+      actorUsername: notificacionGuardada.emisor.username, // o username real
+      mensaje: notificacionGuardada.previewText,
+      actorAvatar: notificacionGuardada.emisor.foto_url,
+      linkId: notificacionGuardada.resourceId,
     });
 
     return this.amigoRepository.findOne({
@@ -131,17 +131,16 @@ export class AmigoController {
     newNotificacion.resourceId = req.id;
     newNotificacion.previewText = (action === "FRIEND" ? "ha aceptado tu solicitud de amistad" : "ha rechazado tu solicitud de amistad");
 
-    await PostgresDataSource.manager.save(newNotificacion);
-    const noti = await this.userRepository.find();
-    console.log(noti);
-
+    const notificacionGuardada = await PostgresDataSource.manager.save(newNotificacion);
+    
     notificarUsuario(req.requesting_user.correo, {
-       tipo: tipoAccion,
-       actorName: req.receiving_user.nombre_completo,
-       actorUsername: req.receiving_user.username, // o username real
-       actorAvatar: req.receiving_user.foto_url,
-       mensaje: (action === "FRIEND" ? "ha aceptado tu solicitud de amistad" : "ha rechazado tu solicitud de amistad"),
-       linkId: req.id,
+        id: notificacionGuardada.id,
+        tipo: notificacionGuardada.type,
+        actorName: notificacionGuardada.emisor.nombre_completo,
+        actorUsername: notificacionGuardada.emisor.username, // o username real
+        actorAvatar: notificacionGuardada.emisor.foto_url,
+        mensaje: notificacionGuardada.previewText,
+        linkId: req.id,
      });
     return this.amigoRepository.save(req);
     

@@ -140,16 +140,15 @@ export const notificarUsuario = (userId: string, data: any) => {
   // Convertimos los datos al formato que tu Frontend espera
   // Asegúrate que estos campos coincidan con lo que usa tu NotificationCard
   const payload = {
-    id: Date.now(), // ID temporal
+    id: data.id,// ID temporal
     tipo: data.tipo, // "FRIEND_REQUEST", "COMMENT", etc.
     leido: false,
     fecha: new Date(),
     actor_nombre: data.actorName,
-    actor_avatar: data.actorAvatar || "/img/angel.jpg",
+    actor_avatar: data.actorAvatar,
     actor_username: data.actorUsername,
     preview: {
       mensaje: data.mensaje,
-      linkId: data.linkId,
     },
     linkId: data.linkId,
   };

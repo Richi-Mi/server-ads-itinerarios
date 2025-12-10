@@ -26,6 +26,7 @@ export class NotificacionController {
     return listN;
   }
   async markAsRead(id: number, correo: string) {
+    console.log("Mark as read called with id:", id, "and correo:", correo);
     const notificacion = await this.notificacionRepository.findOne({
       where: {
         id,

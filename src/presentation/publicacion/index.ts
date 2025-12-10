@@ -101,16 +101,16 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
                  newNotificacion.resourceId = nuevaPublicacion.id;
                  newNotificacion.previewText = "ha hecho una nueva publicación";
 
-                 await notifRepo.save(newNotificacion);
+                 const notificacionGuardada = await notifRepo.save(newNotificacion);
 
                  notificarUsuario(destinatario.correo, {
-                    tipo: NotificationType.POST, 
-                    actorName: usuario.nombre_completo || usuario.username,
-                    actorUsername: usuario.username,
-                    actorAvatar: usuario.foto_url || "",
-                    mensaje: "ha hecho una nueva publicación",
-                    linkId: nuevaPublicacion.id,
-                    fecha: new Date()
+                    id: notificacionGuardada.id,
+                    tipo: notificacionGuardada.type,
+                    actorName: notificacionGuardada.emisor.nombre_completo,
+                    actorUsername: notificacionGuardada.emisor.username, // o username real
+                    mensaje: notificacionGuardada.previewText,
+                    actorAvatar: notificacionGuardada.emisor.foto_url,
+                    linkId: notificacionGuardada.resourceId,
                  });
             }
         }
