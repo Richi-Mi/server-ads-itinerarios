@@ -28,19 +28,28 @@ export class ItinerarioController {
     }
 
     public getItinerarioById = async (idString: string, authUser: AuthUser): Promise<Itinerario> => {
+        const id = parseInt(idString);
+        
         const itinerario = await this.itinerarioRepository.findOne({
             where: { id: parseInt(idString) },
             relations: ['actividades', 'actividades.lugar']
         });
 
-        if (!itinerario) 
-            throw new CustomError("Itinerario no encontrado", 404);
-
-        if (authUser.role === "admin")
+        if (authUser.role === "admin" && itinerario)
             return itinerario;
 
-        if (itinerario.owner.correo !== authUser.correo)
-            throw new CustomError("No tienes permiso para ver este itinerario", 403);
+        itinerario = await this.itinerarioRepository.findOne({
+            where: { 
+                id: id,
+                owner: {
+                    correo: authUser.correo
+                }
+            },
+            relations: ['actividades', 'actividades.lugar']
+        });
+
+        if (!itinerario) 
+            throw new CustomError("Itinerario no encontrado", 404);
 
         return itinerario;
     }
@@ -115,17 +124,23 @@ export class ItinerarioController {
             relations: ["owner"]
         });
 
-        if (!itinerario) {
-            throw new CustomError("Itinerario no encontrado", 404);
-        }
-
         if (authUser.role === "admin") {
             await this.itinerarioRepository.remove(itinerario);
             return itinerario;
         }
 
-        if( itinerario.owner.correo !== authUser.correo )
-            throw new CustomError("No tienes permiso para borrar este itinerario", 403);
+        itinerario = await this.itinerarioRepository.findOne({
+            where: { 
+                id: id,
+                owner: {
+                    correo: authUser.correo
+                }
+            },
+            relations: ['owner'],
+        });
+
+        if (!itinerario)
+            throw new CustomError("Itinerario no encontrado", 404);
 
         await this.itinerarioRepository.remove(itinerario);
         return itinerario;
