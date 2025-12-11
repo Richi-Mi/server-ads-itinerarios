@@ -13,7 +13,7 @@ export class AmigoController {
     private userRepository: Repository<Usuario>
   ) {}
 
-  private friend(correoA: string, correoB?: string) {
+  private friend(correoA: string, correoB?: string, tatus: FriendRequestState = FriendRequestState.FRIEND) {
     if (correoB) {
       return [
         {
@@ -104,6 +104,29 @@ export class AmigoController {
     });
   }
 
+  async cancelRequest(sender: string, receiving: string) {
+    const senderUser = await this.userRepository.findOne({
+      where: [{ correo: sender }, { username: sender }],
+    });
+    const receivingUser = await this.userRepository.findOne({
+      where: [{ correo: receiving }, { username: receiving }],
+    }); 
+    if (!senderUser || !receivingUser)
+      throw new CustomError("Este usuario no existe", 404);   
+    const req = await this.amigoRepository.findOne({
+        where: this.friend(
+            senderUser.correo,
+            receivingUser.correo,
+            FriendRequestState.PENDING
+        )
+    });
+         if(!req)
+            throw new CustomError("No se encontro solicitud", 404); 
+
+        return this.amigoRepository.remove(req!); 
+  }
+
+
   async respondRequest(
     requestId: number,
     action: "FRIEND" | "REJECT",
@@ -122,24 +145,25 @@ export class AmigoController {
     } else {
       req.status = FriendRequestState.REJECTED;
     }
+    const tipoAccion = action === "FRIEND" ? NotificationType.FRIEND_ACCEPTED : NotificationType.FRIEND_REJECTED;
     const newNotificacion = new Notificacion();
-    newNotificacion.type = NotificationType.FRIEND_ACCEPTED;
+    newNotificacion.type = tipoAccion;
     newNotificacion.isRead = false;
     newNotificacion.emisor = req.receiving_user;
     newNotificacion.receptor = req.requesting_user;
     newNotificacion.resourceId = req.id;
-    newNotificacion.previewText = "ha aceptado tu solicitud de amistad";
+    newNotificacion.previewText = (action === "FRIEND" ? "ha aceptado tu solicitud de amistad" : "ha rechazado tu solicitud de amistad");
 
     await PostgresDataSource.manager.save(newNotificacion);
     const noti = await this.userRepository.find();
     console.log(noti);
 
     notificarUsuario(req.requesting_user.correo, {
-       tipo: "FRIEND_ACCEPTED",
+       tipo: tipoAccion,
        actorName: req.receiving_user.nombre_completo,
        actorUsername: req.receiving_user.username, // o username real
        actorAvatar: req.receiving_user.foto_url,
-       mensaje: "ha aceptado tu solicitud de amistad",
+       mensaje: (action === "FRIEND" ? "ha aceptado tu solicitud de amistad" : "ha rechazado tu solicitud de amistad"),
        linkId: req.id,
      });
     return this.amigoRepository.save(req);
@@ -151,7 +175,11 @@ export class AmigoController {
       where: {
         receiving_user: { correo },
         status: FriendRequestState.PENDING,
+       
       },
+       relations: ["requesting_user", "receiving_user"], 
+       select:{ id:true, status:true, requesting_user:{ nombre_completo: true, username: true, foto_url: true }}
+
     });
     if (listR.length === 0)
       // throw new CustomError("No tienes solicitudes de amistad", 400);
@@ -186,8 +214,29 @@ export class AmigoController {
   }
 
   async removeFriend(user: string, friend: string) {
+    const usuario = await this.userRepository.findOne({
+      where: [{ correo: user }, { username: user }]
+    });
+    const amigo = await this.userRepository.findOne({
+      where: [{ correo: friend }, { username: friend }]
+    }); 
+
+    if (!usuario || !amigo)
+       throw new CustomError("Este usuario no existe", 404);
+
     const relation = await this.amigoRepository.findOne({
-      where: this.friend(user, friend),
+         where: [
+      {
+        requesting_user: { correo: usuario.correo },
+        receiving_user: { correo: amigo.correo },
+        status: FriendRequestState.FRIEND,
+      },
+      {
+        requesting_user: { correo: amigo.correo },
+        receiving_user: { correo: usuario.correo },
+        status: FriendRequestState.FRIEND,
+      },
+    ],
     });
 
     if (!relation) throw new CustomError("Ya no son amigos ", 404);
@@ -195,6 +244,80 @@ export class AmigoController {
     return this.amigoRepository.remove(relation);
   }
 
+
+    async block(user: string, block: string ) {
+
+        const senderUser = await this.userRepository.findOne({
+             where: [{ correo: user }, { username: user }]
+        });
+
+        const receivingUser = await this.userRepository.findOne({
+             where: [{ correo: block }, { username: block }]
+        }); 
+
+        if (!senderUser || !receivingUser)
+           throw new CustomError("Este usuario no existe", 404); 
+
+        const req = await this.amigoRepository.findOne({
+            where: this.friend(senderUser.correo, receivingUser.correo)
+        }); 
+
+        if(req){
+            req.status = FriendRequestState.LOCKED;
+            return this.amigoRepository.save(req);
+        }
+
+        const blockUser = this.amigoRepository.create({
+            requesting_user: senderUser,
+            receiving_user: receivingUser,
+            status: FriendRequestState.LOCKED
+        });
+
+        return this.amigoRepository.save(blockUser);
+    }
+
+    async unblock(user: string, block:string){
+        const senderUser = await this.userRepository.findOne({
+             where: [{ correo: user }, { username: user }]
+        });
+
+        const receivingUser = await this.userRepository.findOne({
+             where: [{ correo: block }, { username: block }]
+        }); 
+
+        if (!senderUser || !receivingUser)
+           throw new CustomError("Este usuario no existe", 404); 
+
+        const req = await this.amigoRepository.findOne({
+            where: this.friend(senderUser.correo, receivingUser.correo, FriendRequestState.LOCKED)
+        }); 
+
+        if(!req)
+            throw new CustomError("Este usuario no esta bloqueado", 404);
+
+        req.status = FriendRequestState.FRIEND;
+        return this.amigoRepository.remove(req!); 
+    }
+
+   async listBlock(user: string){
+        const sender = await this.userRepository.findOne({
+                where: [{ correo: user }, { username: user }]
+        }); 
+
+        if (!sender)
+           throw new CustomError("Este usuario no existe", 404);
+
+        const blockedUsers = await this.amigoRepository.find({
+            where: {
+                requesting_user: { correo: sender.correo },
+                status: FriendRequestState.LOCKED
+            }, 
+            relations: ["receiving_user"],
+        }); 
+
+        return blockedUsers.map(block => ({ username: block.receiving_user.username, nombre_completo: block.receiving_user.nombre_completo, correo: block.receiving_user.correo, foto_url: block.receiving_user.foto_url }));
+    }
+    
   async getFriendsOfFriends(correo: string): Promise<
     {
       username: string;

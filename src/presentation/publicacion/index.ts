@@ -80,7 +80,6 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
         body
       );
 
-      
       const userRepo = PostgresDataSource.getRepository(Usuario);
       const amigoRepo = PostgresDataSource.getRepository(Amigo);
       const notifRepo = PostgresDataSource.getRepository(Notificacion);
@@ -112,7 +111,7 @@ export const publicacionRoutes = new Elysia({ prefix: "/publicacion", name: "Pub
                  await notifRepo.save(newNotificacion);
 
                  notificarUsuario(destinatario.correo, {
-                    tipo: Notification.Type.POST, 
+                    tipo: NotificationType.POST, 
                     actorName: usuario.nombre_completo || usuario.username,
                     actorUsername: usuario.username,
                     actorAvatar: usuario.foto_url || "",

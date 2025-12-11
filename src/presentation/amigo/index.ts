@@ -17,6 +17,7 @@ import { Amigo, Usuario } from "../../data/model";
  * @link DELETE /:username   - Eliminar amigo por username
  * @link POST  /block        -> body "user: user email or username add"            - Bloquear user 
  * @link POST  /unblock      -> body "user: user email or username add"            - desloquear user 
+ * @link GET   /unblock      -> body "user: user email or username add"            - desloquear user 
  */
 export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
  .use(authService)
@@ -82,6 +83,11 @@ export const amigoRoutes = new Elysia({ prefix: "/amigo", name: "Amigo" })
     const r = await amigoController.unblock(user.correo, body.user)  
     return { message: "Amigo desbloqueado" }; 
    }, { body: AmigoModel.desbloquear  })
+
+   .get("/listblock", async ({ store: {user}, amigoController}) => { 
+      const blockedUsers = await amigoController.listBlock(user.correo);
+      return { message: "Usuarios bloqueados: ", data: blockedUsers }; 
+   })
 
    .get("/sugerencias", async ({ store: { user }, amigoController }) => {
         const sugerencias = await amigoController.getFriendsOfFriends(user.correo);

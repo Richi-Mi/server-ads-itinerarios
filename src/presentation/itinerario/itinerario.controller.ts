@@ -5,7 +5,7 @@ import { ItinerarioModel } from "./itinerario.model";
 import { Brackets } from "typeorm";
 interface AuthUser{
     correo: string;
-    //role: string;
+    role: string;
 }
 
 export class ItinerarioController {
@@ -15,31 +15,26 @@ export class ItinerarioController {
     ) {}
 
     public getAllItinerarios = async (authUser: AuthUser): Promise<Itinerario[]> => {
-        
-        const itinerarios = await this.itinerarioRepository.find({
-            where:{
-                owner:{
-                    correo: authUser.correo
-                }
-            },
-            relations: ['actividades', 'actividades.lugar']
+        if (authUser.role === "admin") {
+            return await this.itinerarioRepository.find({
+                relations: ["actividades", "actividades.lugar"]
+            });
+        }
+
+        return await this.itinerarioRepository.find({
+            where: { owner: { correo: authUser.correo } },
+            relations: ["actividades", "actividades.lugar"]
         });
-        
-        return itinerarios;
     }
 
-    public getItinerarioById = async (idString: string, authUser: AuthUser): Promise<Itinerario> => {
-        const id = parseInt(idString);
-
+    public getItinerarioById = async (idString: string, authUser: AuthUser): Promise<Itinerario> => {        
         const itinerario = await this.itinerarioRepository.findOne({
-            where: { 
-                id: id,
-                owner: {
-                    correo: authUser.correo
-                }
-            },
-            relations: ['actividades', 'actividades.lugar']
-        });
+            where: { id: parseInt(idString) },
+            relations: ['actividades', 'actividades.lugar', 'owner']
+        });        
+
+        if (authUser.role === "admin" && itinerario)
+            return itinerario;
 
         if (!itinerario) 
             throw new CustomError("Itinerario no encontrado", 404);
@@ -112,7 +107,7 @@ export class ItinerarioController {
         if(isNaN(id))
             throw new CustomError("ID invalido", 400);
 
-        const itinerario = await this.itinerarioRepository.findOne({
+        let itinerario = await this.itinerarioRepository.findOne({
             where: { 
                 id: id,
                 owner: {
@@ -121,11 +116,9 @@ export class ItinerarioController {
             },
             relations: ['owner'],
         });
-        if( !itinerario )
-            throw new CustomError("Itinerario no encontrado", 404);
 
-        if( itinerario.owner.correo !== authUser.correo )
-            throw new CustomError("No tienes permiso para borrar este itinerario", 403);
+        if (!itinerario)
+            throw new CustomError("Itinerario no encontrado", 404);
 
         await this.itinerarioRepository.remove(itinerario);
         return itinerario;
