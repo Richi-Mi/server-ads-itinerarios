@@ -33,18 +33,7 @@ export class PublicacionController {
         }
         return await this.getAverageRatingUseCase.execute(publicationId);
     }
-    return await this.getAverageRatingUseCase.execute(publicationId);
-  };
-
-  public shareItinerary = async (
-    itinerarioId: number,
-    userCorreo: string,
-    body: PublicacionModel.ShareBody
-  ) => {
-    const { descripcion, privacity_mode, fotos } = body;
-    if (isNaN(itinerarioId) || itinerarioId <= 0) {
-      throw new CustomError("ID de itinerario no válido", 400);
-    }
+  
 
     // public getMyPublications = async (userCorreo: string) => {
     //     const publicaciones = await this.publicacionRepository.find({
@@ -145,9 +134,6 @@ export class PublicacionController {
 
         return feed;   //feed del usuario
     }
-
-    return { ...publication, fotos: fileUrls };
-  };
 
   public deletePublication = async (
     publicationId: number,
