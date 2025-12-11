@@ -66,17 +66,17 @@ export class PublicacionController {
          
     }
 
+    // public getMyPublications = async (userCorreo: string) => {
+    //     const publicaciones = await this.publicacionRepository.find({
+    //         // where: { user_shared: { correo: userCorreo } }, //Comentando esta linea se muestran todas las publicaciones
+    //         relations: ['itinerario', 'fotos', 'user_shared', 'reseñas', 'reseñas.usuario'],
+    //         order: { id: 'DESC' }
+    //     });
+
+    //     return publicaciones;
+    // }
+
     public getMyPublications = async (userCorreo: string) => {
-        const publicaciones = await this.publicacionRepository.find({
-            // where: { user_shared: { correo: userCorreo } }, //Comentando esta linea se muestran todas las publicaciones
-            relations: ['itinerario', 'fotos', 'user_shared', 'reseñas', 'reseñas.usuario'],
-            order: { id: 'DESC' }
-        });
-
-        return publicaciones;
-    }
-
-    public getMyPrueba = async (userCorreo: string) => {
         //Obtiene las preferencias del usuario
         const preferencias = await this.prefRepository.find( {where: {correo: userCorreo}}); //No se porque no jalo con findOneBy
         
@@ -95,7 +95,7 @@ export class PublicacionController {
             // order: { id: 'DESC' }
         });
 
-        //Obitne mis amigos
+        //Obtiene mis amigos
         const misAmigos = await this.amigoController.listFriend(userCorreo) || [];
         const correoAmigos = misAmigos.flatMap(a => [a.requesting_user.correo, a.receiving_user.correo])
                                         .filter(c => c !== userCorreo);

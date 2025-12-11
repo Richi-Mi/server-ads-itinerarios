@@ -154,7 +154,8 @@ export class AmigoController {
       },
     });
     if (listR.length === 0)
-      throw new CustomError("No tienes solicitudes de amistad", 400);
+      // throw new CustomError("No tienes solicitudes de amistad", 400);
+      return [];
     return listR;
   }
 
@@ -164,7 +165,8 @@ export class AmigoController {
       relations: ["requesting_user", "receiving_user"],
     });
     if (listF.length === 0)
-      throw new CustomError("No tienes amigos aun :(", 400);
+      // throw new CustomError("No tienes amigos aun :(", 400);
+      return [];
     return listF;
   }
 
